@@ -3,7 +3,10 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', 'Beranda') | TIM IPSDK</title>
+    <meta name="description" content="Sistem Informasi Pengawasan Pengelolaan Ruang Laut (TIM PPSDK) Kementerian Kelautan dan Perikanan. Platform resmi untuk pendaftaran dan pelaporan dokumen pelaku usaha kelautan dan perikanan.">
+    <meta name="keywords" content="tim ppsdk, ppsdk, kkp, kementerian kelautan dan perikanan, pengawasan tata ruang laut, pengawasan ruang laut, sipelintas">
+    <meta name="author" content="Kementerian Kelautan dan Perikanan RI">
+    <title>@yield('title', 'Beranda') | TIM PPSDK</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -43,7 +46,7 @@
         <a href="{{ route('home') }}" class="d-flex align-items-center text-decoration-none">
             <img src="{{ asset('images/logo.png') }}" alt="Logo" height="40" class="me-2">
             <div>
-                <div class="fw-bold text-dark lh-1">TIM IPSDK</div>
+                <div class="fw-bold text-dark lh-1">TIM PPSDK</div>
                 <div class="text-muted" style="font-size: 0.7rem;">Kementerian Kelautan dan Perikanan</div>
             </div>
         </a>
@@ -87,7 +90,7 @@
                 <div class="d-flex align-items-center mb-3">
                     <img src="{{ asset('images/logo.png') }}" alt="Logo" height="50" class="me-3 bg-white p-1 rounded">
                     <div>
-                        <h5 class="text-white fw-bold mb-0">TIM IPSDK</h5>
+                        <h5 class="text-white fw-bold mb-0">TIM PPSDK</h5>
                         <div class="small opacity-75">Kementerian Kelautan dan Perikanan</div>
                     </div>
                 </div>
