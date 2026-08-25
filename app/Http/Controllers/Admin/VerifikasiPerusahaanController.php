@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Company;
+use App\Notifications\CompanyStatusNotification;
 use Illuminate\Http\Request;
 
 class VerifikasiPerusahaanController extends Controller
@@ -55,6 +56,13 @@ class VerifikasiPerusahaanController extends Controller
                 'catatan_admin'    => $request->filled('catatan_admin') ? $request->catatan_admin : null,
             ]);
 
+            // Kirim notifikasi email ke perusahaan
+            try {
+                $company->user->notify(new CompanyStatusNotification($company));
+            } catch (\Exception $e) {
+                \Log::warning("Gagal mengirim email notifikasi approve: " . $e->getMessage());
+            }
+
             ActivityLog::catat('approve', 'VerifikasiPerusahaan', "Menyetujui dokumen perusahaan: {$company->nama_perusahaan}");
 
             return redirect()->route('admin.verifikasi-perusahaan.index')
@@ -87,6 +95,13 @@ class VerifikasiPerusahaanController extends Controller
                 'rejection_reason' => null,
             ]);
 
+            // Kirim notifikasi email ke perusahaan
+            try {
+                $company->user->notify(new CompanyStatusNotification($company));
+            } catch (\Exception $e) {
+                \Log::warning("Gagal mengirim email notifikasi revision: " . $e->getMessage());
+            }
+
             ActivityLog::catat('revision', 'VerifikasiPerusahaan', "Meminta revisi dokumen perusahaan: {$company->nama_perusahaan}");
 
             return redirect()->route('admin.verifikasi-perusahaan.index')
@@ -117,6 +132,13 @@ class VerifikasiPerusahaanController extends Controller
             'verified_by'      => auth()->id(),
             'verified_at'      => now(),
         ]);
+
+        // Kirim notifikasi email ke perusahaan
+        try {
+            $company->user->notify(new CompanyStatusNotification($company));
+        } catch (\Exception $e) {
+            \Log::warning("Gagal mengirim email notifikasi reject: " . $e->getMessage());
+        }
 
         ActivityLog::catat('reject', 'VerifikasiPerusahaan', "Menolak perusahaan: {$company->nama_perusahaan}");
 
