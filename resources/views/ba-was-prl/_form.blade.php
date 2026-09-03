@@ -44,8 +44,8 @@
     <div class="tab-pane fade show active" id="tab-utama">
         <div class="row g-3">
             <div class="col-md-6 col-12">
-                <label class="form-label">Nomor BA <span class="text-danger">*</span></label>
-                <input type="text" name="nomor_ba" class="form-control" value="{{ old('nomor_ba', $baWasPrl->nomor_ba ?? '') }}" required placeholder="Nomor berita acara">
+                <label class="form-label">Nomor BA <span class="text-muted small">(Opsional)</span></label>
+                <input type="text" name="nomor_ba" class="form-control" value="{{ old('nomor_ba', $baWasPrl->nomor_ba ?? '') }}" placeholder="Kosongkan untuk otomatis dibuat sistem">
             </div>
             <div class="col-md-6 col-12">
                 <label class="form-label">Pelaku Usaha <span class="text-danger">*</span></label>
@@ -81,27 +81,20 @@
                 <input type="text" name="lokasi" class="form-control" value="{{ old('lokasi', $baWasPrl->lokasi ?? '') }}" placeholder="Alamat lengkap">
             </div>
             <div class="col-md-6 col-12">
-                <label class="form-label">Nama Usaha (Opsional)</label>
-                <input type="text" name="nama_usaha" class="form-control" placeholder="Isi jika berbeda dengan Pelaku Usaha" value="{{ old('nama_usaha', $baWasPrl->nama_usaha ?? '') }}">
+                <label class="form-label">Nama Penanggung Jawab</label>
+                <input type="text" name="penanggung_jawab_usaha" class="form-control pj-nama-input" value="{{ old('penanggung_jawab_usaha', $baWasPrl->penanggung_jawab_usaha ?? '') }}">
             </div>
             <div class="col-md-6 col-12">
-                <label class="form-label">Titik Koordinat (hasil pengukuran lapangan)</label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
-                    <input type="text" name="titik_koordinat" class="form-control" placeholder="Koordinat lokasi" value="{{ old('titik_koordinat', $baWasPrl->titik_koordinat ?? '') }}">
-                </div>
+                <label class="form-label">Jabatan Penanggung Jawab</label>
+                <input type="text" name="jabatan_pj_usaha" class="form-control" value="{{ old('jabatan_pj_usaha', $baWasPrl->jabatan_pj_usaha ?? '') }}">
             </div>
             <div class="col-md-6 col-12">
                 <label class="form-label text-muted">Latitude (Desimal)</label>
-                <input type="text" name="latitude" class="form-control form-control-sm" value="{{ old('latitude', $baWasPrl->latitude ?? '') }}" placeholder="Latitude">
+                <input type="text" name="latitude" class="form-control" value="{{ old('latitude', $baWasPrl->latitude ?? '') }}" placeholder="Contoh: 1.45567">
             </div>
             <div class="col-md-6 col-12">
                 <label class="form-label text-muted">Longitude (Desimal)</label>
-                <input type="text" name="longitude" class="form-control form-control-sm" value="{{ old('longitude', $baWasPrl->longitude ?? '') }}" placeholder="Longitude">
-            </div>
-            <div class="col-md-6 col-12">
-                <label class="form-label">Titik Koordinat Existing <span class="text-muted small">(sesuai dokumen KKPRL, jika ada)</span></label>
-                <input type="text" name="titik_koordinat_existing" class="form-control" value="{{ old('titik_koordinat_existing', $baWasPrl->titik_koordinat_existing ?? '') }}">
+                <input type="text" name="longitude" class="form-control" value="{{ old('longitude', $baWasPrl->longitude ?? '') }}" placeholder="Contoh: 125.1873">
             </div>
         </div>
     </div>
@@ -111,29 +104,29 @@
     ========================================================== --}}
     <div class="tab-pane fade" id="tab-pengawas">
         <div class="row g-3 mb-3">
-            <div class="col-md-6 col-12">
+            <div class="col-12">
                 <label class="form-label">No. Surat Tugas / Tanggal / Bulan / Tahun</label>
                 <input type="text" name="no_surat_tugas" class="form-control" value="{{ old('no_surat_tugas', $baWasPrl->no_surat_tugas ?? '') }}" placeholder="Nomor surat tugas">
-            </div>
-            <div class="col-md-6 col-12">
-                <label class="form-label">Unit Kerja Ketua Tim</label>
-                <input type="text" name="ketua_tim_unit_kerja" class="form-control" value="{{ old('ketua_tim_unit_kerja', $baWasPrl->ketua_tim_unit_kerja ?? '') }}" placeholder="Unit kerja">
             </div>
         </div>
 
         <div class="form-section-title"><i class="fas fa-user-shield me-1"></i> Ketua Tim</div>
         <div class="row g-3 mb-2">
-            <div class="col-md-4 col-12">
+            <div class="col-md-3 col-6">
                 <label class="form-label">Nama</label>
                 <input type="text" name="ketua_tim_nama" class="form-control ketua-nama-input" value="{{ old('ketua_tim_nama', $baWasPrl->ketua_tim_nama ?? '') }}">
             </div>
-            <div class="col-md-4 col-12">
+            <div class="col-md-3 col-6">
                 <label class="form-label">NIP</label>
                 <input type="text" name="ketua_tim_nip" class="form-control" value="{{ old('ketua_tim_nip', $baWasPrl->ketua_tim_nip ?? '') }}">
             </div>
-            <div class="col-md-4 col-12">
+            <div class="col-md-3 col-6">
                 <label class="form-label">Jabatan</label>
                 <input type="text" name="ketua_tim_jabatan" class="form-control" value="{{ old('ketua_tim_jabatan', $baWasPrl->ketua_tim_jabatan ?? '') }}">
+            </div>
+            <div class="col-md-3 col-6">
+                <label class="form-label">Unit Kerja</label>
+                <input type="text" name="ketua_tim_unit_kerja" class="form-control" value="{{ old('ketua_tim_unit_kerja', $baWasPrl->ketua_tim_unit_kerja ?? '') }}" placeholder="Unit kerja">
             </div>
         </div>
         <div class="form-text mb-4"><i class="fas fa-signature me-1"></i> Tanda tangan Ketua Tim diisi di tab <strong>5. Pengesahan</strong>.</div>
@@ -326,18 +319,7 @@
          TAB 4 — PELAKU USAHA & SAKSI
     ========================================================== --}}
     <div class="tab-pane fade" id="tab-usaha">
-        <div class="form-section-title"><i class="fas fa-user-tie me-1"></i> Penanggung Jawab Pelaku Usaha</div>
-        <div class="row g-3 mb-2">
-            <div class="col-md-6 col-12">
-                <label class="form-label">Nama Penanggung Jawab</label>
-                <input type="text" name="penanggung_jawab_usaha" class="form-control pj-nama-input" value="{{ old('penanggung_jawab_usaha', $baWasPrl->penanggung_jawab_usaha ?? '') }}">
-            </div>
-            <div class="col-md-6 col-12">
-                <label class="form-label">Jabatan</label>
-                <input type="text" name="jabatan_pj_usaha" class="form-control" value="{{ old('jabatan_pj_usaha', $baWasPrl->jabatan_pj_usaha ?? '') }}">
-            </div>
-        </div>
-        <div class="form-text mb-4"><i class="fas fa-signature me-1"></i> Tanda tangan Penanggung Jawab diisi di tab <strong>5. Pengesahan</strong>.</div>
+        <div class="form-text mb-4"><i class="fas fa-info-circle me-1"></i> Nama Penanggung Jawab dan Jabatan dipindahkan ke <strong>Tab 1. Informasi Utama</strong>. Tanda tangan Penanggung Jawab tetap diisi di tab <strong>5. Pengesahan</strong>.</div>
 
         <div class="d-flex justify-content-between align-items-center mb-2">
             <label class="form-label fw-bold mb-0">Daftar Saksi</label>

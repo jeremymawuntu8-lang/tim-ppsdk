@@ -60,6 +60,10 @@ class BaWasPrlController extends Controller
         $data['ketua_tim_tanda_tangan'] = $this->simpanTandaTangan($data['ketua_tim_tanda_tangan'] ?? null);
         $data['pj_usaha_tanda_tangan'] = $this->simpanTandaTangan($data['pj_usaha_tanda_tangan'] ?? null);
 
+        if (empty($data['nomor_ba'])) {
+            $data['nomor_ba'] = 'BA-PRL-' . date('Ymd') . '-' . strtoupper(Str::random(5));
+        }
+
         $data['created_by'] = auth()->id();
         $ba = BaWasPrl::create($data);
 
@@ -120,6 +124,10 @@ class BaWasPrlController extends Controller
 
         $data['ketua_tim_tanda_tangan'] = $this->simpanTandaTangan($data['ketua_tim_tanda_tangan'] ?? null);
         $data['pj_usaha_tanda_tangan'] = $this->simpanTandaTangan($data['pj_usaha_tanda_tangan'] ?? null);
+
+        if (empty($data['nomor_ba'])) {
+            $data['nomor_ba'] = 'BA-PRL-' . date('Ymd') . '-' . strtoupper(Str::random(5));
+        }
 
         $baWasPrl->update($data);
 

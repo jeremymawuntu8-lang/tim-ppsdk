@@ -17,7 +17,7 @@ class BaWasPrlRequest extends FormRequest
         $id = $this->route('ba_was_prl')?->id;
 
         return [
-            'nomor_ba' => ['required', 'string', 'max:100', Rule::unique('ba_was_prls', 'nomor_ba')->ignore($id)],
+            'nomor_ba' => ['nullable', 'string', 'max:100'],
             'pelaku_usaha_id' => ['required', 'string', 'max:255'],
             'tanggal_pengawasan' => ['required', 'date'],
             'tim_pengawas' => ['nullable', 'string', 'max:255'],
@@ -102,8 +102,6 @@ class BaWasPrlRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'nomor_ba.required' => 'Nomor BA wajib diisi.',
-            'nomor_ba.unique' => 'Nomor BA sudah digunakan.',
             'pelaku_usaha_id.required' => 'Pelaku usaha wajib dipilih atau diketik nama barunya.',
             'tanggal_pengawasan.required' => 'Tanggal pengawasan wajib diisi.',
             'file_ba_pdf.mimes' => 'File BA harus berformat PDF.',
