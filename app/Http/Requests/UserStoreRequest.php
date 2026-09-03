@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 class UserStoreRequest extends FormRequest
@@ -20,7 +21,9 @@ class UserStoreRequest extends FormRequest
             'password' => ['required', 'string', Password::min(8)],
             'no_hp' => ['nullable', 'string', 'max:20'],
             'jabatan' => ['nullable', 'string', 'max:255'],
-            'role' => ['required', 'exists:roles,name'],
+            'role' => ['required', Rule::in(
+                \Spatie\Permission\Models\Role::where('name', '!=', 'super-admin')->pluck('name')->toArray()
+            )],
             'is_active' => ['nullable', 'boolean'],
         ];
     }

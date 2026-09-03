@@ -37,7 +37,8 @@ class UserController extends Controller
 
     public function create()
     {
-        $roles = Role::orderBy('name')->get();
+        // Exclude super-admin dari pilihan role agar super-admin hanya satu
+        $roles = Role::where('name', '!=', 'super-admin')->orderBy('name')->get();
         return view('users.create', compact('roles'));
     }
 
@@ -64,8 +65,13 @@ class UserController extends Controller
     {
         $this->authorize('update', $user);
 
-        $roles = Role::orderBy('name')->get();
-        return view('users.edit', compact('user', 'roles'));
+        // Exclude super-admin dari pilihan role agar super-admin hanya satu
+        $roles = Role::where('name', '!=', 'super-admin')->orderBy('name')->get();
+
+        // Cek apakah super-admin sedang mengedit dirinya sendiri
+        $isSelfEdit = auth()->id() === $user->id && $user->hasRole('super-admin');
+
+        return view('users.edit', compact('user', 'roles', 'isSelfEdit'));
     }
 
     public function update(UserUpdateRequest $request, User $user)
@@ -74,15 +80,30 @@ class UserController extends Controller
 
         $data = $request->validated();
 
-        $user->update([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'no_hp' => $data['no_hp'] ?? null,
-            'jabatan' => $data['jabatan'] ?? null,
-            'is_active' => $request->boolean('is_active', true),
-            ...(! empty($data['password']) ? ['password' => Hash::make($data['password'])] : []),
-        ]);
-        $user->syncRoles([$data['role']]);
+        // Blokir jika mencoba assign role super-admin ke siapapun
+        if (($data['role'] ?? '') === 'super-admin') {
+            return back()->with('error', 'Role Super-admin tidak dapat diberikan melalui form ini.');
+        }
+
+        $isSelfEdit = auth()->id() === $user->id && $user->hasRole('super-admin');
+
+        if ($isSelfEdit) {
+            // Super-admin hanya boleh mengubah nama sendiri
+            $user->update([
+                'name' => $data['name'],
+            ]);
+            // Role tetap super-admin, tidak diubah
+        } else {
+            $user->update([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'no_hp' => $data['no_hp'] ?? null,
+                'jabatan' => $data['jabatan'] ?? null,
+                'is_active' => $request->boolean('is_active', true),
+                ...(! empty($data['password']) ? ['password' => Hash::make($data['password'])] : []),
+            ]);
+            $user->syncRoles([$data['role']]);
+        }
 
         ActivityLog::catat('Edit', 'User Management', "Mengubah user: {$user->name}");
 
