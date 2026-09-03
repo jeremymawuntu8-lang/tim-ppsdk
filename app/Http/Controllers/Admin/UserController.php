@@ -37,8 +37,8 @@ class UserController extends Controller
 
     public function create()
     {
-        // Exclude super-admin dari pilihan role agar super-admin hanya satu
-        $roles = Role::where('name', '!=', 'super-admin')->orderBy('name')->get();
+        // Hanya tampilkan role internal yang bisa di-assign oleh admin
+        $roles = Role::whereIn('name', ['admin', 'pengawas', 'pimpinan'])->orderBy('name')->get();
         return view('users.create', compact('roles'));
     }
 
@@ -65,8 +65,8 @@ class UserController extends Controller
     {
         $this->authorize('update', $user);
 
-        // Exclude super-admin dari pilihan role agar super-admin hanya satu
-        $roles = Role::where('name', '!=', 'super-admin')->orderBy('name')->get();
+        // Hanya tampilkan role internal yang bisa di-assign oleh admin
+        $roles = Role::whereIn('name', ['admin', 'pengawas', 'pimpinan'])->orderBy('name')->get();
 
         // Cek apakah super-admin sedang mengedit dirinya sendiri
         $isSelfEdit = auth()->id() === $user->id && $user->hasRole('super-admin');
@@ -80,12 +80,13 @@ class UserController extends Controller
 
         $data = $request->validated();
 
-        // Blokir jika mencoba assign role super-admin ke siapapun
-        if (($data['role'] ?? '') === 'super-admin') {
-            return back()->with('error', 'Role Super-admin tidak dapat diberikan melalui form ini.');
+        // Blokir jika mencoba assign role yang tidak valid via form ini
+        if (!in_array($data['role'] ?? '', ['admin', 'pengawas', 'pimpinan'])) {
+            return back()->with('error', 'Role tersebut tidak dapat diberikan melalui form ini.');
         }
 
         $isSelfEdit = auth()->id() === $user->id && $user->hasRole('super-admin');
+        $isGoogleUser = $user->auth_provider === 'google';
 
         if ($isSelfEdit) {
             // Super-admin hanya boleh mengubah nama sendiri
@@ -102,7 +103,11 @@ class UserController extends Controller
                 'is_active' => $request->boolean('is_active', true),
                 ...(! empty($data['password']) ? ['password' => Hash::make($data['password'])] : []),
             ]);
-            $user->syncRoles([$data['role']]);
+            
+            // Jangan sinkronisasi role jika user adalah akun perusahaan (Google)
+            if (!$isGoogleUser) {
+                $user->syncRoles([$data['role']]);
+            }
         }
 
         ActivityLog::catat('Edit', 'User Management', "Mengubah user: {$user->name}");

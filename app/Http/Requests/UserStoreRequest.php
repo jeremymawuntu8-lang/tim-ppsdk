@@ -21,9 +21,7 @@ class UserStoreRequest extends FormRequest
             'password' => ['required', 'string', Password::min(8)],
             'no_hp' => ['nullable', 'string', 'max:20'],
             'jabatan' => ['nullable', 'string', 'max:255'],
-            'role' => ['required', Rule::in(
-                \Spatie\Permission\Models\Role::where('name', '!=', 'super-admin')->pluck('name')->toArray()
-            )],
+            'role' => ['required', Rule::in(['admin', 'pengawas', 'pimpinan'])],
             'is_active' => ['nullable', 'boolean'],
         ];
     }

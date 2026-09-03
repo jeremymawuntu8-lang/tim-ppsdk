@@ -48,7 +48,7 @@
                             <label class="form-label">Jabatan</label>
                             <input type="text" {{ $isSelfEdit ? '' : 'name=jabatan' }} class="form-control {{ $isSelfEdit ? 'bg-light' : '' }}" value="{{ $user->jabatan }}" {{ $isSelfEdit ? 'readonly' : '' }}>
                         </div>
-                        @if(!$isSelfEdit)
+                        @if(!$isSelfEdit && $user->auth_provider !== 'google')
                         <div class="col-md-6 col-12">
                             <label class="form-label">Password <span class="text-muted text-xs">(kosongkan jika tidak diubah)</span></label>
                             <input type="password" name="password" class="form-control" placeholder="Password">
@@ -62,10 +62,20 @@
                             </select>
                         </div>
                         @else
+                            @if(!$isSelfEdit)
+                            <div class="col-md-6 col-12">
+                                <label class="form-label">Password <span class="text-muted text-xs">(kosongkan jika tidak diubah)</span></label>
+                                <input type="password" name="password" class="form-control" placeholder="Password">
+                            </div>
+                            @endif
                         <div class="col-md-6 col-12">
                             <label class="form-label">Role Akses</label>
                             <div class="form-control bg-light d-flex align-items-center">
-                                <span class="badge bg-danger me-2"><i class="fas fa-shield-alt me-1"></i>Super-admin</span>
+                                @if($user->auth_provider === 'google')
+                                    <span class="badge bg-primary me-2"><i class="fas fa-building me-1"></i>Perusahaan</span>
+                                @else
+                                    <span class="badge bg-danger me-2"><i class="fas fa-shield-alt me-1"></i>Super-admin</span>
+                                @endif
                                 <small class="text-muted">(tidak dapat diubah)</small>
                             </div>
                         </div>
