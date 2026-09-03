@@ -165,9 +165,13 @@
 
         <div class="form-section-title"><i class="fas fa-building me-1"></i> Detail Pelaku Usaha</div>
         <div class="row g-3 mb-4">
-            <div class="col-md-6 col-12">
+            <div class="col-md-4 col-12">
                 <label class="form-label">Jenis Usaha</label>
-                <input type="text" name="jenis_usaha" class="form-control" placeholder="Isi jika berbeda dengan data Pelaku Usaha" value="{{ old('jenis_usaha', $baWasPrl->jenis_usaha ?? '') }}">
+                <input type="text" name="jenis_usaha" class="form-control" placeholder="Jenis Usaha" value="{{ old('jenis_usaha', $baWasPrl->jenis_usaha ?? '') }}">
+            </div>
+            <div class="col-md-2 col-12">
+                <label class="form-label">KBLI</label>
+                <input type="text" name="kbli" class="form-control" placeholder="KBLI" value="{{ old('kbli', $baWasPrl->kbli ?? '') }}">
             </div>
             <div class="col-md-3 col-6">
                 <label class="form-label">Luas Area</label>

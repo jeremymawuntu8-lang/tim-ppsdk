@@ -389,7 +389,7 @@
         </tr>
         <tr>
             <td class="col-no">4</td><td class="col-label">Jenis Kegiatan</td><td class="col-sep">:</td>
-            <td>{{ $jenisUsahaCetak }}</td>
+            <td>{{ $jenisUsahaCetak }} {{ $baWasPrl->kbli ? '(KBLI: '.$baWasPrl->kbli.')' : '' }}</td>
         </tr>
         <tr>
             <td class="col-no">5</td><td class="col-label">Titik Koordinat Exsisting</td><td class="col-sep">:</td>

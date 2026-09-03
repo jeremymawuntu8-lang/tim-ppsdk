@@ -20,7 +20,7 @@ class BaWasPrl extends Model
         // Field baru — Informasi Pengawasan
         'jam_wita', 'nama_usaha', 'titik_koordinat', 'titik_koordinat_existing',
         // Field baru — Detail Pelaku Usaha (snapshot, override dari relasi PelakuUsaha)
-        'jenis_usaha', 'luas_area', 'provinsi_id',
+        'jenis_usaha', 'kbli', 'luas_area', 'provinsi_id',
         // Field baru — Form Pengawasan
         'metode_pengamatan', 'nomor_perda_rzwp3k', 'tgl_terbit_pkkprl',
         'status_kesesuaian_kkprl', 'catatan_dokumen_pkkprl', 'pemenuhan_kewajiban_pkkprl',

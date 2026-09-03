@@ -54,6 +54,7 @@ class BaWasPrlRequest extends FormRequest
 
             // Detail Pelaku Usaha (snapshot)
             'jenis_usaha' => ['nullable', 'string', 'max:255'],
+            'kbli' => ['nullable', 'string', 'max:255'],
             'luas_area' => ['nullable', 'string', 'max:100'],
             'provinsi_id' => ['nullable', 'exists:provinsis,id'],
 
