@@ -197,8 +197,7 @@ Route::middleware(['auth', 'active', 'internal'])->group(function () {
 Route::get('storage/{path}', function ($path) {
     $fullPath = storage_path('app/public/' . $path);
     if (!file_exists($fullPath)) {
-        echo "404 NOT FOUND. Trying to look for file at: " . $fullPath;
-        die();
+        abort(404);
     }
     return response()->file($fullPath);
 })->where('path', '.*')->name('storage.serve');
