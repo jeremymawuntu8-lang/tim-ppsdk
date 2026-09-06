@@ -74,7 +74,7 @@
                     <h6 class="fw-bold mb-1">Dokumen Diajukan</h6>
                     <p class="text-muted small mb-2">{{ $company->created_at->format('d M Y, H:i') }} WIB</p>
                     @if($company->file_dokumen)
-                        <a href="{{ asset('storage/'.$company->file_dokumen) }}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill">
+                        <a href="{{ asset('storage/'.$company->file_dokumen) }}?t={{ time() }}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill">
                             <i class="fas fa-file-pdf me-1"></i> Lihat Dokumen yang Diunggah
                         </a>
                     @endif

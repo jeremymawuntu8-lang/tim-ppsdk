@@ -85,7 +85,7 @@
                                     </td>
                                     <td>
                                         @if($company->file_dokumen)
-                                            <a href="{{ asset('storage/'.$company->file_dokumen) }}" target="_blank" class="btn btn-sm btn-outline-danger rounded-pill">
+                                            <a href="{{ asset('storage/'.$company->file_dokumen) }}?t={{ time() }}" target="_blank" class="btn btn-sm btn-outline-danger rounded-pill">
                                                 <i class="fas fa-file-pdf me-1"></i> Lihat PDF
                                             </a>
                                         @else

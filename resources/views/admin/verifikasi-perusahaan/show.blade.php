@@ -82,7 +82,7 @@
                         <label class="text-muted small fw-bold mb-2">File Dokumen PDF:</label>
                         <div>
                             @if($company->file_dokumen)
-                                <a href="{{ asset('storage/'.$company->file_dokumen) }}" target="_blank" class="btn btn-outline-danger">
+                                <a href="{{ asset('storage/'.$company->file_dokumen) }}?t={{ time() }}" target="_blank" class="btn btn-outline-danger">
                                     <i class="fas fa-file-pdf me-2"></i> Buka / Unduh Dokumen PDF
                                 </a>
                             @else
