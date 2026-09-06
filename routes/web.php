@@ -192,3 +192,12 @@ Route::middleware(['auth', 'active', 'internal'])->group(function () {
     Route::put('profil', [ProfilController::class, 'update'])->name('profil.update');
     Route::put('profil/password', [ProfilController::class, 'updatePassword'])->name('profil.password');
 });
+
+// Fallback route untuk melayani file storage secara native (mengatasi masalah symlink di shared hosting)
+Route::get('storage/{path}', function ($path) {
+    $fullPath = storage_path('app/public/' . $path);
+    if (!file_exists($fullPath)) {
+        abort(404);
+    }
+    return response()->file($fullPath);
+})->where('path', '.*')->name('storage.serve');
