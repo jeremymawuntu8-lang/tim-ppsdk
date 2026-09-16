@@ -79,7 +79,7 @@
                         <div class="col-md-12">
                             <label class="form-label fw-semibold">File Dokumen <span class="text-danger">*</span></label>
                             <input type="file" name="file" class="form-control" required>
-                            <div class="form-text">Format: PDF, JPG, PNG. Maksimal 10MB.</div>
+                            <div class="form-text">Format: PDF, JPG, PNG. Maksimal 100MB.</div>
                         </div>
                     </div>
                 </div>

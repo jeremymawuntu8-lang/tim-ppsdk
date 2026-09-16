@@ -86,7 +86,7 @@ class DokumenController extends Controller
             'nomor_hp' => ['required', 'string'],
             'email' => ['required', 'email'],
             'jenis_dokumen' => ['required', 'string'],
-            'file' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
+            'file' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:102400'],
         ]);
 
         $pelakuUsahaInput = $data['pelaku_usaha_id'];
