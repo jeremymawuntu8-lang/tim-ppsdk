@@ -201,7 +201,7 @@
             </div>
             <div class="jadwal-details">
                 <div class="jadwal-info-main">
-                    <div class="company-name"><i class="fas fa-ship text-primary"></i> {{ $j->nama_perusahaan ?? 'Perusahaan Tidak Diketahui' }}</div>
+                    <div class="company-name"><i class="fas fa-building text-primary"></i> {{ $j->nama_perusahaan ?? 'Perusahaan Tidak Diketahui' }}</div>
                     <div class="person-name"><i class="fas fa-user-tie"></i> {{ $j->tim_pengawas ?? 'Tim Pengawas belum ditentukan' }}</div>
                     <div class="ba-type">{{ $j->jenis_pengawasan }}</div>
                     <div>
