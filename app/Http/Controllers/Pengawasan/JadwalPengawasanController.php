@@ -3,67 +3,50 @@
 namespace App\Http\Controllers\Pengawasan;
 
 use App\Http\Controllers\Controller;
-use App\Models\ActivityLog;
-use App\Models\JadwalPengawasan;
-use App\Http\Requests\JadwalPengawasanRequest;
 use App\Models\PelakuUsaha;
 use Illuminate\Http\Request;
-use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Facades\DB;
 
 class JadwalPengawasanController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $pelakuUsahas = PelakuUsaha::orderBy('nama_perusahaan')->get();
-        return view('jadwal.index', compact('pelakuUsahas'));
-    }
+        $prl = DB::table('ba_was_prls')
+            ->select('id', 'pelaku_usaha_id', 'tanggal_pengawasan', 'jam_wita', 'tim_pengawas', 'status', DB::raw("'BA WAS PRL' as jenis_pengawasan"));
+            
+        $alse = DB::table('ba_was_alses')
+            ->select('id', 'pelaku_usaha_id', 'tanggal_pengawasan', 'jam_wita', 'tim_pengawas', 'status', DB::raw("'BA WAS ALSE' as jenis_pengawasan"));
+            
+        $reklamasi = DB::table('ba_reklamasis')
+            ->select('id', 'pelaku_usaha_id', 'tanggal_pengawasan', 'jam_wita', DB::raw("CONCAT_WS(', ', ttd_pengawas_1, ttd_pengawas_2) as tim_pengawas"), 'status', DB::raw("'BA Reklamasi' as jenis_pengawasan"));
+            
+        $ppk = DB::table('ba_ppks')
+            ->select('id', 'pelaku_usaha_id', 'tanggal_pengawasan', 'jam_wita', 'ttd_pengawas_1 as tim_pengawas', 'status', DB::raw("'BA PPK' as jenis_pengawasan"));
+            
+        $pencemaran = DB::table('ba_pencemarans')
+            ->select('id', 'pelaku_usaha_id', 'tanggal_pengawasan', 'jam_wita', 'ttd_pengawas_1 as tim_pengawas', 'status', DB::raw("'BA Pencemaran' as jenis_pengawasan"));
 
-    public function data(Request $request)
-    {
-        $query = JadwalPengawasan::with('pelakuUsaha')->when($request->status, fn ($q, $v) => $q->where('status', $v));
+        $query = $prl->union($alse)->union($reklamasi)->union($ppk)->union($pencemaran);
+        
+        $results = DB::table(DB::raw("({$query->toSql()}) as merged_ba"))
+            ->mergeBindings($query)
+            ->join('pelaku_usahas', 'merged_ba.pelaku_usaha_id', '=', 'pelaku_usahas.id')
+            ->select('merged_ba.*', 'pelaku_usahas.nama_perusahaan', 'pelaku_usahas.nomor_hp')
+            ->orderBy('merged_ba.tanggal_pengawasan', 'desc')
+            ->get();
 
-        return DataTables::of($query)
-            ->addIndexColumn()
-            ->addColumn('perusahaan', fn ($r) => $r->pelakuUsaha->nama_perusahaan ?? '-')
-            ->addColumn('tanggal', fn ($r) => $r->tanggal_rencana?->format('d/m/Y'))
-            ->addColumn('status_badge', fn ($r) => '<span class="badge bg-'.match ($r->status) {
-                'selesai' => 'success', 'sedang_berjalan' => 'warning', 'dibatalkan' => 'danger', default => 'secondary',
-            }.'">'.ucwords(str_replace('_', ' ', $r->status)).'</span>')
-            ->addColumn('aksi', fn ($r) => view('jadwal.partials.aksi', ['row' => $r])->render())
-            ->rawColumns(['status_badge', 'aksi'])
-            ->make(true);
-    }
+        $jadwals = $results->map(function($item) {
+            $item->url = '#';
+            switch ($item->jenis_pengawasan) {
+                case 'BA WAS PRL': $item->url = route('ba-was-prl.show', $item->id); break;
+                case 'BA WAS ALSE': $item->url = route('ba-was-alse.show', $item->id); break;
+                case 'BA Reklamasi': $item->url = route('ba-reklamasi.show', $item->id); break;
+                case 'BA PPK': $item->url = route('ba-ppk.show', $item->id); break;
+                case 'BA Pencemaran': $item->url = route('ba-pencemaran.show', $item->id); break;
+            }
+            return $item;
+        });
 
-    public function store(JadwalPengawasanRequest $request)
-    {
-        $data = $request->validated();
-        $data['created_by'] = auth()->id();
-
-        JadwalPengawasan::create($data);
-        ActivityLog::catat('Tambah', 'Jadwal Pengawasan', 'Menambahkan jadwal pengawasan baru');
-
-        return redirect()->route('jadwal.index')->with('success', 'Jadwal berhasil ditambahkan.');
-    }
-
-    public function edit(JadwalPengawasan $jadwal)
-    {
-        $pelakuUsahas = PelakuUsaha::orderBy('nama_perusahaan')->get();
-        return view('jadwal.edit', compact('jadwal', 'pelakuUsahas'));
-    }
-
-    public function update(JadwalPengawasanRequest $request, JadwalPengawasan $jadwal)
-    {
-        $jadwal->update($request->validated());
-        ActivityLog::catat('Edit', 'Jadwal Pengawasan', 'Mengubah jadwal pengawasan');
-
-        return redirect()->route('jadwal.index')->with('success', 'Jadwal berhasil diperbarui.');
-    }
-
-    public function destroy(JadwalPengawasan $jadwal)
-    {
-        ActivityLog::catat('Hapus', 'Jadwal Pengawasan', 'Menghapus jadwal pengawasan');
-        $jadwal->delete();
-
-        return response()->json(['success' => true, 'message' => 'Jadwal berhasil dihapus.']);
+        return view('jadwal.index', compact('jadwals'));
     }
 }

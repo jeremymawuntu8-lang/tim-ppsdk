@@ -133,7 +133,7 @@ Route::middleware(['auth', 'active', 'internal'])->group(function () {
         Route::resource('ba-pencemaran', BaPencemaranController::class);
 
         Route::get('jadwal/data', [JadwalPengawasanController::class, 'data'])->name('jadwal.data');
-        Route::resource('jadwal', JadwalPengawasanController::class)->except(['create', 'show']);
+        Route::resource('jadwal', JadwalPengawasanController::class)->only(['index']);
 
         Route::get('monitoring', [MonitoringController::class, 'index'])->name('monitoring.index');
     });
