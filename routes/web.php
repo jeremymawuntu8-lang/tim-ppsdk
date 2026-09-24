@@ -19,6 +19,7 @@ use App\Http\Controllers\Pengawasan\BaPpkController;
 use App\Http\Controllers\Pengawasan\BaPencemaranController;
 use App\Http\Controllers\Pengawasan\JadwalPengawasanController;
 use App\Http\Controllers\Pengawasan\MonitoringController;
+use App\Http\Controllers\Pengawasan\PengawasanTidakLangsungController;
 use App\Http\Controllers\PengaturanController;
 use App\Http\Controllers\Perusahaan\CompanyDashboardController;
 use App\Http\Controllers\Perusahaan\CompanyProfileController;
@@ -132,8 +133,16 @@ Route::middleware(['auth', 'active', 'internal'])->group(function () {
         Route::get('ba-pencemaran/{ba_pencemaran}/cetak', [BaPencemaranController::class, 'cetak'])->name('ba-pencemaran.cetak');
         Route::resource('ba-pencemaran', BaPencemaranController::class);
 
+        Route::get('pengawasan-tidak-langsung/data', [PengawasanTidakLangsungController::class, 'data'])->name('pengawasan-tidak-langsung.data');
+        Route::get('pengawasan-tidak-langsung/{pengawasan_tidak_langsung}/cetak', [PengawasanTidakLangsungController::class, 'cetak'])->name('pengawasan-tidak-langsung.cetak');
+        Route::resource('pengawasan-tidak-langsung', PengawasanTidakLangsungController::class)->parameters(['pengawasan-tidak-langsung' => 'pengawasan_tidak_langsung']);
+
         Route::get('jadwal/data', [JadwalPengawasanController::class, 'data'])->name('jadwal.data');
         Route::resource('jadwal', JadwalPengawasanController::class)->only(['index']);
+
+        Route::get('surat-peringatan/data', [\App\Http\Controllers\SuratPeringatanController::class, 'indexData'])->name('surat-peringatan.data');
+        Route::get('surat-peringatan/export', [\App\Http\Controllers\SuratPeringatanController::class, 'export'])->name('surat-peringatan.export');
+        Route::resource('surat-peringatan', \App\Http\Controllers\SuratPeringatanController::class);
 
         Route::get('monitoring', [MonitoringController::class, 'index'])->name('monitoring.index');
     });

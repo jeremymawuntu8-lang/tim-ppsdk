@@ -54,7 +54,7 @@
 
                 {{-- Pengawasan --}}
                 @can('kelola-pengawasan')
-                <li class="nav-item {{ request()->routeIs(['ba-was-prl.*','ba-was-alse.*','ba-reklamasi.*','ba-ppk.*','ba-pencemaran.*','jadwal.*','monitoring.*']) ? 'menu-open' : '' }}">
+                <li class="nav-item {{ request()->routeIs(['ba-was-prl.*','ba-was-alse.*','ba-reklamasi.*','ba-ppk.*','ba-pencemaran.*','pengawasan-tidak-langsung.*','jadwal.*','monitoring.*']) ? 'menu-open' : '' }}">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-magnifying-glass"></i>
                         <p>Pengawasan <i class="nav-arrow fas fa-angle-left"></i></p>
@@ -91,6 +91,12 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a href="{{ route('pengawasan-tidak-langsung.index') }}" class="nav-link {{ request()->routeIs('pengawasan-tidak-langsung.*') ? 'active' : '' }}">
+                                <i class="fas fa-file-lines nav-icon"></i>
+                                <p>Pengawasan Tidak Langsung</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a href="{{ route('jadwal.index') }}" class="nav-link {{ request()->routeIs('jadwal.*') ? 'active' : '' }}">
                                 <i class="fas fa-calendar-days nav-icon"></i>
                                 <p>Jadwal Pengawasan</p>
@@ -103,6 +109,16 @@
                             </a>
                         </li>
                     </ul>
+                </li>
+                @endcan
+
+                {{-- Surat Peringatan --}}
+                @can('kelola-pengawasan')
+                <li class="nav-item">
+                    <a href="{{ route('surat-peringatan.index') }}" class="nav-link {{ request()->routeIs('surat-peringatan.*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-envelope"></i>
+                        <p>Surat Peringatan</p>
+                    </a>
                 </li>
                 @endcan
 
