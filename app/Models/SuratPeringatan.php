@@ -81,4 +81,12 @@ class SuratPeringatan extends Model
     {
         return $this->morphMany(ArsipDokumenBa::class, 'arsipable');
     }
+    
+    /**
+     * Alias for BA generic components
+     */
+    public function getNomorBaAttribute()
+    {
+        return $this->id_penerbitan;
+    }
 }

@@ -130,11 +130,25 @@
 
                 {{-- Surat Peringatan --}}
                 @can('kelola-pengawasan')
-                <li class="nav-item">
-                    <a href="{{ route('surat-peringatan.index') }}" class="nav-link {{ request()->routeIs('surat-peringatan.*') ? 'active' : '' }}">
+                <li class="nav-item {{ request()->routeIs(['surat-peringatan.*', 'arsip-surat-peringatan.*']) ? 'menu-open' : '' }}">
+                    <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-envelope"></i>
-                        <p>Surat Peringatan</p>
+                        <p>Surat Peringatan <i class="nav-arrow fas fa-angle-left"></i></p>
                     </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                            <a href="{{ route('surat-peringatan.index') }}" class="nav-link {{ request()->routeIs('surat-peringatan.*') ? 'active' : '' }}">
+                                <i class="fas fa-list nav-icon"></i>
+                                <p>Data Surat Peringatan</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('arsip-surat-peringatan.index') }}" class="nav-link {{ request()->routeIs('arsip-surat-peringatan.*') ? 'active' : '' }}">
+                                <i class="fas fa-archive nav-icon text-warning"></i>
+                                <p>Arsip Surat Peringatan</p>
+                            </a>
+                        </li>
+                    </ul>
                 </li>
                 @endcan
 

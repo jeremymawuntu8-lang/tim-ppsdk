@@ -78,6 +78,41 @@ class ArsipDokumenBaController extends Controller
     }
 
     /**
+     * Halaman Utama Menu Arsip Dokumen Surat Peringatan.
+     */
+    public function indexSp(Request $request)
+    {
+        $query = ArsipDokumenBa::with(['arsipable', 'uploader'])
+            ->where('arsipable_type', \App\Models\SuratPeringatan::class)
+            ->latest();
+
+        if ($request->filled('tipe')) {
+            $query->where('tipe', $request->tipe);
+        }
+
+        if ($request->filled('q')) {
+            $q = $request->q;
+            $query->where(function ($sub) use ($q) {
+                $sub->where('judul', 'like', "%{$q}%")
+                    ->orWhere('nama_file', 'like', "%{$q}%")
+                    ->orWhere('keterangan', 'like', "%{$q}%");
+            });
+        }
+
+        $arsipList = $query->paginate(15)->withQueryString();
+
+        $stats = [
+            'total'  => ArsipDokumenBa::where('arsipable_type', \App\Models\SuratPeringatan::class)->count(),
+            'files'  => ArsipDokumenBa::where('arsipable_type', \App\Models\SuratPeringatan::class)->where('tipe', 'file')->count(),
+            'links'  => ArsipDokumenBa::where('arsipable_type', \App\Models\SuratPeringatan::class)->where('tipe', 'link')->count(),
+        ];
+
+        $spList = \App\Models\SuratPeringatan::select('id', 'id_penerbitan as nomor_ba')->latest()->get();
+
+        return view('surat-peringatan.arsip', compact('arsipList', 'stats', 'spList'));
+    }
+
+    /**
      * Simpan arsip dokumen lama (file upload atau link Google Drive).
      * Khusus Admin / Super-Admin.
      */

@@ -144,6 +144,9 @@ Route::middleware(['auth', 'active', 'internal'])->group(function () {
         Route::get('surat-peringatan/data', [\App\Http\Controllers\SuratPeringatanController::class, 'indexData'])->name('surat-peringatan.data');
         Route::get('surat-peringatan/export', [\App\Http\Controllers\SuratPeringatanController::class, 'export'])->name('surat-peringatan.export');
         Route::resource('surat-peringatan', \App\Http\Controllers\SuratPeringatanController::class);
+        
+        // Arsip Surat Peringatan
+        Route::get('arsip-surat-peringatan', [\App\Http\Controllers\ArsipDokumenBaController::class, 'indexSp'])->name('arsip-surat-peringatan.index');
 
         // Arsip Dokumen Lama per BA
         Route::get('arsip-dokumen-ba', [\App\Http\Controllers\ArsipDokumenBaController::class, 'index'])->name('arsip-dokumen-ba.index');
