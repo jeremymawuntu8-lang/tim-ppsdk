@@ -9,6 +9,7 @@ use App\Models\PelakuUsaha;
 use App\Models\Provinsi;
 use App\Http\Requests\BaWasPrlRequest;
 use App\Traits\ResolvesPelakuUsaha;
+use App\Traits\HandlesArsipDokumenBa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -16,7 +17,7 @@ use Yajra\DataTables\Facades\DataTables;
 
 class BaWasPrlController extends Controller
 {
-    use ResolvesPelakuUsaha;
+    use ResolvesPelakuUsaha, HandlesArsipDokumenBa;
 
     public function index()
     {
@@ -88,6 +89,8 @@ class BaWasPrlController extends Controller
             }
         }
 
+        $this->simpanArsipDokumenDariForm($ba, $request);
+
         ActivityLog::catat('Tambah', 'BA WAS PRL', "Menambahkan BA WAS PRL: {$ba->nomor_ba}");
 
         return redirect()->route('ba-was-prl.index')->with('success', 'BA WAS PRL berhasil ditambahkan.');
@@ -95,7 +98,7 @@ class BaWasPrlController extends Controller
 
     public function show(BaWasPrl $baWasPrl)
     {
-        $baWasPrl->load(['pelakuUsaha', 'fotos', 'pengawas', 'saksis']);
+        $baWasPrl->load(['pelakuUsaha', 'fotos', 'pengawas', 'saksis', 'arsipDokumen.uploader']);
         return view('ba-was-prl.show', compact('baWasPrl'));
     }
 
@@ -103,7 +106,7 @@ class BaWasPrlController extends Controller
     {
         $this->authorize('update', $baWasPrl);
 
-        $baWasPrl->load(['pengawas', 'saksis']);
+        $baWasPrl->load(['pengawas', 'saksis', 'arsipDokumen']);
         $pelakuUsahas = PelakuUsaha::orderBy('nama_perusahaan')->get();
         $provinsis = Provinsi::orderBy('nama')->get();
         return view('ba-was-prl.edit', compact('baWasPrl', 'pelakuUsahas', 'provinsis'));
@@ -156,6 +159,8 @@ class BaWasPrlController extends Controller
                 $baWasPrl->saksis()->create($s);
             }
         }
+
+        $this->simpanArsipDokumenDariForm($baWasPrl, $request);
 
         ActivityLog::catat('Edit', 'BA WAS PRL', "Mengubah BA WAS PRL: {$baWasPrl->nomor_ba}");
 

@@ -230,6 +230,8 @@
     </div>
 </div>
 
+@include('pengawasan.partials._form_arsip_dokumen', ['ba' => $baReklamasi ?? null])
+
 <div class="card fade-in mt-4">
     <div class="card-body">
         <div class="d-flex justify-content-end gap-2">

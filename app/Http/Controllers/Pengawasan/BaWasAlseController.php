@@ -9,6 +9,7 @@ use App\Models\PelakuUsaha;
 use App\Models\Provinsi;
 use App\Http\Requests\BaWasAlseRequest;
 use App\Traits\ResolvesPelakuUsaha;
+use App\Traits\HandlesArsipDokumenBa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -16,7 +17,7 @@ use Yajra\DataTables\Facades\DataTables;
 
 class BaWasAlseController extends Controller
 {
-    use ResolvesPelakuUsaha;
+    use ResolvesPelakuUsaha, HandlesArsipDokumenBa;
 
     public function index()
     {
@@ -84,6 +85,8 @@ class BaWasAlseController extends Controller
             }
         }
 
+        $this->simpanArsipDokumenDariForm($ba, $request);
+
         ActivityLog::catat('Tambah', 'BA WAS ALSE', "Menambahkan BA WAS ALSE: {$ba->nomor_ba}");
 
         return redirect()->route('ba-was-alse.index')->with('success', 'BA WAS ALSE berhasil ditambahkan.');
@@ -91,13 +94,13 @@ class BaWasAlseController extends Controller
 
     public function show(BaWasAlse $baWasAlse)
     {
-        $baWasAlse->load(['pelakuUsaha', 'fotos', 'pengawas', 'saksis', 'provinsi']);
+        $baWasAlse->load(['pelakuUsaha', 'fotos', 'pengawas', 'saksis', 'provinsi', 'arsipDokumen.uploader']);
         return view('ba-was-alse.show', compact('baWasAlse'));
     }
 
     public function edit(BaWasAlse $baWasAlse)
     {
-        $baWasAlse->load(['pengawas', 'saksis']);
+        $baWasAlse->load(['pengawas', 'saksis', 'arsipDokumen']);
         $pelakuUsahas = PelakuUsaha::orderBy('nama_perusahaan')->get();
         $provinsis = Provinsi::orderBy('nama')->get();
         return view('ba-was-alse.edit', compact('baWasAlse', 'pelakuUsahas', 'provinsis'));
@@ -144,6 +147,8 @@ class BaWasAlseController extends Controller
                 $baWasAlse->saksis()->create($s);
             }
         }
+
+        $this->simpanArsipDokumenDariForm($baWasAlse, $request);
 
         ActivityLog::catat('Edit', 'BA WAS ALSE', "Mengubah BA WAS ALSE: {$baWasAlse->nomor_ba}");
 

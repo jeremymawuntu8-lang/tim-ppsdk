@@ -8,6 +8,7 @@ use App\Models\BaReklamasi;
 use App\Models\PelakuUsaha;
 use App\Http\Requests\BaReklamasiRequest;
 use App\Traits\ResolvesPelakuUsaha;
+use App\Traits\HandlesArsipDokumenBa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -15,7 +16,7 @@ use Yajra\DataTables\Facades\DataTables;
 
 class BaReklamasiController extends Controller
 {
-    use ResolvesPelakuUsaha;
+    use ResolvesPelakuUsaha, HandlesArsipDokumenBa;
 
     public function index()
     {
@@ -71,18 +72,20 @@ class BaReklamasiController extends Controller
 
         ActivityLog::catat('Tambah', 'BA REKLAMASI', "Menambahkan BA Reklamasi: {$ba->nomor_ba}");
 
+        $this->simpanArsipDokumenDariForm($ba, $request);
+
         return redirect()->route('ba-reklamasi.index')->with('success', 'BA Reklamasi berhasil ditambahkan.');
     }
 
     public function show(BaReklamasi $baReklamasi)
     {
-        $baReklamasi->load(['pelakuUsaha', 'fotos', 'pengawas']);
+        $baReklamasi->load(['pelakuUsaha', 'fotos', 'pengawas', 'arsipDokumen.uploader']);
         return view('ba-reklamasi.show', compact('baReklamasi'));
     }
 
     public function edit(BaReklamasi $baReklamasi)
     {
-        $baReklamasi->load(['pengawas']);
+        $baReklamasi->load(['pengawas', 'arsipDokumen']);
         $pelakuUsahas = PelakuUsaha::orderBy('nama_perusahaan')->get();
         return view('ba-reklamasi.edit', compact('baReklamasi', 'pelakuUsahas'));
     }
@@ -114,6 +117,8 @@ class BaReklamasiController extends Controller
                 $baReklamasi->pengawas()->create($p);
             }
         }
+
+        $this->simpanArsipDokumenDariForm($baReklamasi, $request);
 
         ActivityLog::catat('Edit', 'BA REKLAMASI', "Mengubah BA Reklamasi: {$baReklamasi->nomor_ba}");
 

@@ -74,6 +74,11 @@ class BaWasAlse extends Model
         return $this->hasMany(BaWasAlseSaksi::class);
     }
 
+    public function arsipDokumen()
+    {
+        return $this->morphMany(ArsipDokumenBa::class, 'arsipable');
+    }
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');

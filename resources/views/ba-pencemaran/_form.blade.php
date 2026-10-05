@@ -1010,6 +1010,8 @@
     </div>
 </div>
 
+@include('pengawasan.partials._form_arsip_dokumen', ['ba' => $baPencemaran ?? null])
+
 <div class="card-footer bg-light border-top shadow-sm position-sticky bottom-0 z-1 d-flex justify-content-between align-items-center p-3">
     <a href="{{ route('ba-pencemaran.index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i> Batal / Kembali</a>
     <div>

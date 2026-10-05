@@ -43,6 +43,11 @@ class BaReklamasi extends Model
         return $this->hasMany(BaReklamasiFoto::class);
     }
 
+    public function arsipDokumen()
+    {
+        return $this->morphMany(ArsipDokumenBa::class, 'arsipable');
+    }
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');

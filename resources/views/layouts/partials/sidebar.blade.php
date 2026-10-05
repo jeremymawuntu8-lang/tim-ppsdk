@@ -54,7 +54,7 @@
 
                 {{-- Pengawasan --}}
                 @can('kelola-pengawasan')
-                <li class="nav-item {{ request()->routeIs(['ba-was-prl.*','ba-was-alse.*','ba-reklamasi.*','ba-ppk.*','ba-pencemaran.*','pengawasan-tidak-langsung.*','jadwal.*','monitoring.*']) ? 'menu-open' : '' }}">
+                <li class="nav-item {{ request()->routeIs(['ba-was-prl.*','ba-was-alse.*','ba-reklamasi.*','ba-ppk.*','ba-pencemaran.*','pengawasan-tidak-langsung.*','jadwal.*','monitoring.*','arsip-dokumen-ba.*']) ? 'menu-open' : '' }}">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-magnifying-glass"></i>
                         <p>Pengawasan <i class="nav-arrow fas fa-angle-left"></i></p>
@@ -108,6 +108,12 @@
                                 <p>Monitoring</p>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="{{ route('arsip-dokumen-ba.index') }}" class="nav-link {{ request()->routeIs('arsip-dokumen-ba.*') ? 'active' : '' }}">
+                                <i class="fas fa-archive nav-icon text-warning"></i>
+                                <p>Arsip Dokumen BA</p>
+                            </a>
+                        </li>
                     </ul>
                 </li>
                 @endcan
@@ -124,7 +130,7 @@
 
                 {{-- Dokumen Menu --}}
                 @canany(['kelola-dokumen', 'kelola-user'])
-                <li class="nav-item {{ request()->routeIs(['dokumen.*', 'admin.verifikasi-perusahaan.*']) ? 'menu-open' : '' }}">
+                <li class="nav-item {{ request()->routeIs(['dokumen.*', 'admin.verifikasi-perusahaan.*', 'arsip-dokumen-ba.*']) ? 'menu-open' : '' }}">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-folder-open"></i>
                         <p>Dokumen <i class="nav-arrow fas fa-angle-left"></i></p>
@@ -143,6 +149,12 @@
                             <a href="{{ route('dokumen.index') }}" class="nav-link {{ request()->routeIs('dokumen.*') ? 'active' : '' }}">
                                 <i class="fas fa-file-signature nav-icon"></i>
                                 <p>Dokumen Pelaku Usaha</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('arsip-dokumen-ba.index') }}" class="nav-link {{ request()->routeIs('arsip-dokumen-ba.*') ? 'active' : '' }}">
+                                <i class="fas fa-archive nav-icon text-warning"></i>
+                                <p>Arsip Dokumen BA</p>
                             </a>
                         </li>
                         @endcan

@@ -46,6 +46,11 @@ class BaPencemaran extends Model
         return $this->hasMany(BaPencemaranFoto::class);
     }
 
+    public function arsipDokumen()
+    {
+        return $this->morphMany(ArsipDokumenBa::class, 'arsipable');
+    }
+
     public function scopeFilter($query, $filters)
     {
         $search = $filters['search'] ?? null;

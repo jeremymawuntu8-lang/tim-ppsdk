@@ -144,6 +144,11 @@ Route::middleware(['auth', 'active', 'internal'])->group(function () {
         Route::get('surat-peringatan/export', [\App\Http\Controllers\SuratPeringatanController::class, 'export'])->name('surat-peringatan.export');
         Route::resource('surat-peringatan', \App\Http\Controllers\SuratPeringatanController::class);
 
+        // Arsip Dokumen Lama per BA
+        Route::get('arsip-dokumen-ba', [\App\Http\Controllers\ArsipDokumenBaController::class, 'index'])->name('arsip-dokumen-ba.index');
+        Route::post('arsip-dokumen-ba', [\App\Http\Controllers\ArsipDokumenBaController::class, 'store'])->name('arsip-dokumen-ba.store');
+        Route::delete('arsip-dokumen-ba/{arsipDokumenBa}', [\App\Http\Controllers\ArsipDokumenBaController::class, 'destroy'])->name('arsip-dokumen-ba.destroy');
+
         Route::get('monitoring', [MonitoringController::class, 'index'])->name('monitoring.index');
     });
 
@@ -195,6 +200,9 @@ Route::middleware(['auth', 'active', 'internal'])->group(function () {
         Route::get('pengaturan', [PengaturanController::class, 'index'])->name('pengaturan.index');
         Route::put('pengaturan', [PengaturanController::class, 'update'])->name('pengaturan.update');
     });
+
+    // Download / Lihat Arsip Dokumen BA (Semua role internal yang punya akses BA)
+    Route::get('arsip-dokumen-ba/{arsipDokumenBa}/download', [\App\Http\Controllers\ArsipDokumenBaController::class, 'download'])->name('arsip-dokumen-ba.download');
 
     // Profil - semua user login boleh akses profil sendiri
     Route::get('profil', [ProfilController::class, 'index'])->name('profil.index');

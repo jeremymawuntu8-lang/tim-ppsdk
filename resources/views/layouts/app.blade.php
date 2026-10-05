@@ -115,6 +115,13 @@
         }
     });
 
+    // Global Modal Backdrop Fix: ensure modal is never trapped inside transformed elements
+    $(document).on('show.bs.modal', '.modal', function () {
+        if (!$(this).parent().is('body')) {
+            $(this).appendTo('body');
+        }
+    });
+
     // Auto-dismiss alerts after 5 seconds
     setTimeout(function() {
         $('#alertSuccess').alert('close');

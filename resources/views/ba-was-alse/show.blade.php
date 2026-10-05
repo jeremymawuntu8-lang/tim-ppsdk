@@ -190,6 +190,9 @@
             </div>
         </div>
         @endif
+
+        {{-- Arsip Dokumen Lama & Google Drive --}}
+        <x-arsip-dokumen-ba :arsipable="$baWasAlse" tipeBa="ba-was-alse" />
         
     </div>
 </div>

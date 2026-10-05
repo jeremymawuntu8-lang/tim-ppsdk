@@ -8,6 +8,7 @@ use App\Models\BaPpk;
 use App\Models\PelakuUsaha;
 use App\Http\Requests\BaPpkRequest;
 use App\Traits\ResolvesPelakuUsaha;
+use App\Traits\HandlesArsipDokumenBa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -15,7 +16,7 @@ use Yajra\DataTables\Facades\DataTables;
 
 class BaPpkController extends Controller
 {
-    use ResolvesPelakuUsaha;
+    use ResolvesPelakuUsaha, HandlesArsipDokumenBa;
 
     public function index()
     {
@@ -71,18 +72,20 @@ class BaPpkController extends Controller
 
         ActivityLog::catat('Tambah', 'BA PPK', "Menambahkan BA PPK: {$ba->nomor_ba}");
 
+        $this->simpanArsipDokumenDariForm($ba, $request);
+
         return redirect()->route('ba-ppk.index')->with('success', 'BA PPK berhasil ditambahkan.');
     }
 
     public function show(BaPpk $baPpk)
     {
-        $baPpk->load(['pelakuUsaha', 'fotos', 'pengawas']);
+        $baPpk->load(['pelakuUsaha', 'fotos', 'pengawas', 'arsipDokumen.uploader']);
         return view('ba-ppk.show', compact('baPpk'));
     }
 
     public function edit(BaPpk $baPpk)
     {
-        $baPpk->load(['pengawas']);
+        $baPpk->load(['pengawas', 'arsipDokumen']);
         $pelakuUsahas = PelakuUsaha::orderBy('nama_perusahaan')->get();
         return view('ba-ppk.edit', compact('baPpk', 'pelakuUsahas'));
     }
@@ -114,6 +117,8 @@ class BaPpkController extends Controller
                 $baPpk->pengawas()->create($p);
             }
         }
+
+        $this->simpanArsipDokumenDariForm($baPpk, $request);
 
         ActivityLog::catat('Edit', 'BA PPK', "Mengubah BA PPK: {$baPpk->nomor_ba}");
 

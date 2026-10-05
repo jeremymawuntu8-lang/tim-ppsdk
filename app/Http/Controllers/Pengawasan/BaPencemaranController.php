@@ -8,6 +8,7 @@ use App\Models\BaPencemaran;
 use App\Models\PelakuUsaha;
 use App\Http\Requests\BaPencemaranRequest;
 use App\Traits\ResolvesPelakuUsaha;
+use App\Traits\HandlesArsipDokumenBa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -15,7 +16,7 @@ use Yajra\DataTables\Facades\DataTables;
 
 class BaPencemaranController extends Controller
 {
-    use ResolvesPelakuUsaha;
+    use ResolvesPelakuUsaha, HandlesArsipDokumenBa;
 
     public function index()
     {
@@ -72,18 +73,20 @@ class BaPencemaranController extends Controller
 
         ActivityLog::catat('Tambah', 'BA Pencemaran', "Menambahkan BA Pencemaran: {$ba->nomor_ba}");
 
+        $this->simpanArsipDokumenDariForm($ba, $request);
+
         return redirect()->route('ba-pencemaran.index')->with('success', 'BA Pencemaran berhasil ditambahkan.');
     }
 
     public function show(BaPencemaran $baPencemaran)
     {
-        $baPencemaran->load(['pelakuUsaha', 'fotos', 'pengawas']);
+        $baPencemaran->load(['pelakuUsaha', 'fotos', 'pengawas', 'arsipDokumen.uploader']);
         return view('ba-pencemaran.show', compact('baPencemaran'));
     }
 
     public function edit(BaPencemaran $baPencemaran)
     {
-        $baPencemaran->load(['pengawas']);
+        $baPencemaran->load(['pengawas', 'arsipDokumen']);
         $pelakuUsahas = PelakuUsaha::orderBy('nama_perusahaan')->get();
         return view('ba-pencemaran.edit', compact('baPencemaran', 'pelakuUsahas'));
     }
@@ -117,6 +120,8 @@ class BaPencemaranController extends Controller
                 $baPencemaran->pengawas()->create($p);
             }
         }
+
+        $this->simpanArsipDokumenDariForm($baPencemaran, $request);
 
         ActivityLog::catat('Edit', 'BA Pencemaran', "Mengubah BA Pencemaran: {$baPencemaran->nomor_ba}");
 
