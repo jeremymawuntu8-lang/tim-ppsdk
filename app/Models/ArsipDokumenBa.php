@@ -116,6 +116,7 @@ class ArsipDokumenBa extends Model
             BaReklamasi::class => 'BA Reklamasi',
             BaPpk::class => 'BA PPK',
             BaPencemaran::class => 'BA Pencemaran',
+            SuratPeringatan::class => 'Surat Peringatan',
             default => class_basename($this->arsipable_type),
         };
     }
@@ -135,6 +136,7 @@ class ArsipDokumenBa extends Model
             BaReklamasi::class => route('ba-reklamasi.show', $this->arsipable_id),
             BaPpk::class => route('ba-ppk.show', $this->arsipable_id),
             BaPencemaran::class => route('ba-pencemaran.show', $this->arsipable_id),
+            SuratPeringatan::class => route('surat-peringatan.show', $this->arsipable_id),
             default => null,
         };
     }

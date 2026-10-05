@@ -13,19 +13,21 @@ class ArsipDokumenBaController extends Controller
      * Mapping tipe BA ke model class.
      */
     public const BA_MODELS = [
-        'ba-was-prl'    => \App\Models\BaWasPrl::class,
-        'ba-was-alse'   => \App\Models\BaWasAlse::class,
-        'ba-reklamasi'  => \App\Models\BaReklamasi::class,
-        'ba-ppk'        => \App\Models\BaPpk::class,
-        'ba-pencemaran' => \App\Models\BaPencemaran::class,
+        'ba-was-prl'       => \App\Models\BaWasPrl::class,
+        'ba-was-alse'      => \App\Models\BaWasAlse::class,
+        'ba-reklamasi'     => \App\Models\BaReklamasi::class,
+        'ba-ppk'           => \App\Models\BaPpk::class,
+        'ba-pencemaran'    => \App\Models\BaPencemaran::class,
+        'surat-peringatan' => \App\Models\SuratPeringatan::class,
     ];
 
     public const BA_LABELS = [
-        'ba-was-prl'    => 'BA WAS PRL',
-        'ba-was-alse'   => 'BA WAS ALSE',
-        'ba-reklamasi'  => 'BA Reklamasi',
-        'ba-ppk'        => 'BA PPK',
-        'ba-pencemaran' => 'BA Pencemaran',
+        'ba-was-prl'       => 'BA WAS PRL',
+        'ba-was-alse'      => 'BA WAS ALSE',
+        'ba-reklamasi'     => 'BA Reklamasi',
+        'ba-ppk'           => 'BA PPK',
+        'ba-pencemaran'    => 'BA Pencemaran',
+        'surat-peringatan' => 'Surat Peringatan',
     ];
 
     /**
@@ -63,11 +65,12 @@ class ArsipDokumenBaController extends Controller
 
         // List BA untuk pilihan modal tambah
         $baList = [
-            'ba-was-prl'    => \App\Models\BaWasPrl::select('id', 'nomor_ba')->latest()->get(),
-            'ba-was-alse'   => \App\Models\BaWasAlse::select('id', 'nomor_ba')->latest()->get(),
-            'ba-reklamasi'  => \App\Models\BaReklamasi::select('id', 'nomor_ba')->latest()->get(),
-            'ba-ppk'        => \App\Models\BaPpk::select('id', 'nomor_ba')->latest()->get(),
-            'ba-pencemaran' => \App\Models\BaPencemaran::select('id', 'nomor_ba')->latest()->get(),
+            'ba-was-prl'       => \App\Models\BaWasPrl::select('id', 'nomor_ba')->latest()->get(),
+            'ba-was-alse'      => \App\Models\BaWasAlse::select('id', 'nomor_ba')->latest()->get(),
+            'ba-reklamasi'     => \App\Models\BaReklamasi::select('id', 'nomor_ba')->latest()->get(),
+            'ba-ppk'           => \App\Models\BaPpk::select('id', 'nomor_ba')->latest()->get(),
+            'ba-pencemaran'    => \App\Models\BaPencemaran::select('id', 'nomor_ba')->latest()->get(),
+            'surat-peringatan' => \App\Models\SuratPeringatan::select('id', 'id_penerbitan as nomor_ba')->latest()->get(),
         ];
 
         return view('arsip-dokumen-ba.index', compact('arsipList', 'stats', 'baList'));

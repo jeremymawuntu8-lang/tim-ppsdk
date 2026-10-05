@@ -73,4 +73,12 @@ class SuratPeringatan extends Model
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+
+    /**
+     * Relasi polymorphic ke arsip_dokumen_ba.
+     */
+    public function arsipDokumen()
+    {
+        return $this->morphMany(ArsipDokumenBa::class, 'arsipable');
+    }
 }
