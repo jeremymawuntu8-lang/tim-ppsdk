@@ -78,6 +78,7 @@
                     <option value="ba-reklamasi" @selected(request('tipe_ba') === 'ba-reklamasi')>BA Reklamasi</option>
                     <option value="ba-ppk" @selected(request('tipe_ba') === 'ba-ppk')>BA PPK</option>
                     <option value="ba-pencemaran" @selected(request('tipe_ba') === 'ba-pencemaran')>BA Pencemaran</option>
+                    <option value="surat-peringatan" @selected(request('tipe_ba') === 'surat-peringatan')>Surat Peringatan</option>
                 </select>
             </div>
             <div class="col-md-3 col-12">
@@ -250,6 +251,7 @@
                                 <option value="ba-reklamasi">BA Reklamasi</option>
                                 <option value="ba-ppk">BA PPK</option>
                                 <option value="ba-pencemaran">BA Pencemaran</option>
+                                <option value="surat-peringatan">Surat Peringatan</option>
                             </select>
                         </div>
 
