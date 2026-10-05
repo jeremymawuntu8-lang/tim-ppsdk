@@ -17,7 +17,7 @@
                 <i class="fas fa-archive"></i>
             </div>
             <div>
-                <h3 class="card-title fw-bold mb-0">Arsip Dokumen Lama & Google Drive</h3>
+                <h3 class="card-title fw-bold mb-0">{{ $tipeBa === 'surat-peringatan' ? 'Arsip Surat Peringatan Lama & Google Drive' : 'Arsip Dokumen Lama & Google Drive' }}</h3>
                 <small class="text-muted d-block">Dokumen dan tautan arsip sebelum sistem ini dirilis</small>
             </div>
         </div>
@@ -108,7 +108,7 @@
                         <i class="fas fa-folder-open fa-2x"></i>
                     </div>
                     <h6 class="text-secondary fw-bold mb-1">Belum Ada Arsip Dokumen Lama</h6>
-                    <p class="text-muted small mb-3">Dokumen lama (sebelum sistem dirilis) atau tautan Google Drive belum ditambahkan ke Berita Acara ini.</p>
+                    <p class="text-muted small mb-3">Dokumen lama (sebelum sistem dirilis) atau tautan Google Drive belum ditambahkan ke {{ $tipeBa === 'surat-peringatan' ? 'Surat Peringatan' : 'Berita Acara' }} ini.</p>
                     @if($isAdmin)
                         <div class="d-flex justify-content-center gap-2">
                             <button type="button" class="btn btn-primary btn-sm px-3" data-bs-toggle="modal" data-bs-target="#modalUploadFileArsip">

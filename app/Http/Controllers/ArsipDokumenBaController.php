@@ -36,7 +36,9 @@ class ArsipDokumenBaController extends Controller
      */
     public function index(Request $request)
     {
-        $query = ArsipDokumenBa::with(['arsipable', 'uploader'])->latest();
+        $query = ArsipDokumenBa::with(['arsipable', 'uploader'])
+            ->where('arsipable_type', '!=', \App\Models\SuratPeringatan::class)
+            ->latest();
 
         if ($request->filled('tipe_ba') && isset(self::BA_MODELS[$request->tipe_ba])) {
             $query->where('arsipable_type', self::BA_MODELS[$request->tipe_ba]);
@@ -70,7 +72,6 @@ class ArsipDokumenBaController extends Controller
             'ba-reklamasi'     => \App\Models\BaReklamasi::select('id', 'nomor_ba')->latest()->get(),
             'ba-ppk'           => \App\Models\BaPpk::select('id', 'nomor_ba')->latest()->get(),
             'ba-pencemaran'    => \App\Models\BaPencemaran::select('id', 'nomor_ba')->latest()->get(),
-            'surat-peringatan' => \App\Models\SuratPeringatan::select('id', 'id_penerbitan as nomor_ba')->latest()->get(),
         ];
 
         return view('arsip-dokumen-ba.index', compact('arsipList', 'stats', 'baList'));
