@@ -20,6 +20,7 @@ use App\Http\Controllers\Pengawasan\BaPencemaranController;
 use App\Http\Controllers\Pengawasan\JadwalPengawasanController;
 use App\Http\Controllers\Pengawasan\MonitoringController;
 use App\Http\Controllers\Pengawasan\PengawasanTidakLangsungController;
+use App\Http\Controllers\Pengawasan\TimelinePengawasanController;
 use App\Http\Controllers\PengaturanController;
 use App\Http\Controllers\Perusahaan\CompanyDashboardController;
 use App\Http\Controllers\Perusahaan\CompanyProfileController;
@@ -150,6 +151,10 @@ Route::middleware(['auth', 'active', 'internal'])->group(function () {
         Route::delete('arsip-dokumen-ba/{arsipDokumenBa}', [\App\Http\Controllers\ArsipDokumenBaController::class, 'destroy'])->name('arsip-dokumen-ba.destroy');
 
         Route::get('monitoring', [MonitoringController::class, 'index'])->name('monitoring.index');
+
+        // Timeline progres pengawasan per Pelaku Usaha
+        Route::get('timeline-pengawasan', [TimelinePengawasanController::class, 'index'])->name('timeline-pengawasan.index');
+        Route::get('timeline-pengawasan/{pelakuUsaha}', [TimelinePengawasanController::class, 'show'])->name('timeline-pengawasan.show');
     });
 
     // Dokumen (kelola-dokumen)

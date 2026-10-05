@@ -1917,3 +1917,285 @@ html {
 .modal {
     z-index: 1060 !important;
 }
+
+/* ============================================================
+   TIMELINE PENGAWASAN — Stepper & Riwayat Kejadian
+   ============================================================ */
+.tl-c-primary   { --tl-color: #0A3D6B; --tl-soft: rgba(10, 61, 107, 0.09); }
+.tl-c-info      { --tl-color: #0277BD; --tl-soft: rgba(2, 119, 189, 0.10); }
+.tl-c-success   { --tl-color: #2E7D32; --tl-soft: rgba(46, 125, 50, 0.10); }
+.tl-c-warning   { --tl-color: #E65100; --tl-soft: rgba(245, 127, 23, 0.12); }
+.tl-c-danger    { --tl-color: #C62828; --tl-soft: rgba(198, 40, 40, 0.10); }
+.tl-c-secondary { --tl-color: #6B7280; --tl-soft: rgba(107, 114, 128, 0.10); }
+.tl-c-purple    { --tl-color: #6A1B9A; --tl-soft: rgba(106, 27, 154, 0.10); }
+.tl-c-teal      { --tl-color: #00796B; --tl-soft: rgba(0, 121, 107, 0.10); }
+.tl-c-indigo    { --tl-color: #3949AB; --tl-soft: rgba(57, 73, 171, 0.10); }
+.tl-c-orange    { --tl-color: #EF6C00; --tl-soft: rgba(239, 108, 0, 0.11); }
+
+/* ---- Stepper ---- */
+.tl-stepper-wrap { overflow-x: auto; padding: 0.25rem 0 0.5rem; }
+.tl-stepper {
+    display: flex;
+    align-items: flex-start;
+    min-width: 560px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.tl-step {
+    flex: 1;
+    text-align: center;
+    position: relative;
+    padding: 0 0.25rem;
+}
+.tl-step::before {
+    content: '';
+    position: absolute;
+    top: 22px;
+    left: calc(-50% + 26px);
+    width: calc(100% - 52px);
+    height: 4px;
+    border-radius: 4px;
+    background: var(--ppsdk-border);
+    z-index: 0;
+}
+.tl-step:first-child::before { display: none; }
+.tl-step.is-done::before,
+.tl-step.is-skipped::before { background: linear-gradient(90deg, #43A047, #2E7D32); }
+.tl-step.is-active::before { background: linear-gradient(90deg, #2E7D32, #FFA726); }
+.tl-step.is-alert::before  { background: linear-gradient(90deg, #2E7D32, #E53935); }
+.tl-step.is-skipped::before { opacity: 0.55; }
+
+.tl-step-dot {
+    position: relative;
+    z-index: 1;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    background: #fff;
+    color: var(--ppsdk-text-muted);
+    border: 3px solid var(--ppsdk-border);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.tl-step:hover .tl-step-dot { transform: translateY(-2px) scale(1.05); }
+.tl-step.is-done .tl-step-dot {
+    background: linear-gradient(135deg, #43A047, #2E7D32);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(46, 125, 50, 0.3);
+}
+.tl-step.is-active .tl-step-dot {
+    background: linear-gradient(135deg, #FFB74D, #F57C00);
+    border-color: transparent;
+    color: #fff;
+    animation: tlPulseWarn 1.8s ease-out infinite;
+}
+.tl-step.is-alert .tl-step-dot {
+    background: linear-gradient(135deg, #EF5350, #C62828);
+    border-color: transparent;
+    color: #fff;
+    animation: tlPulseDanger 1.6s ease-out infinite;
+}
+.tl-step.is-next .tl-step-dot {
+    border-color: var(--ppsdk-primary-light);
+    color: var(--ppsdk-primary-light);
+    background: rgba(21, 101, 192, 0.07);
+}
+.tl-step.is-skipped .tl-step-dot {
+    border-style: dashed;
+    border-color: #A5D6A7;
+    color: #81C784;
+    background: #F6FBF6;
+}
+.tl-step-label {
+    margin-top: 0.55rem;
+    font-weight: 700;
+    font-size: 0.83rem;
+    color: var(--ppsdk-text);
+    line-height: 1.2;
+}
+.tl-step.is-pending .tl-step-label { color: var(--ppsdk-text-muted); font-weight: 600; }
+.tl-step-note { font-size: 0.74rem; color: var(--ppsdk-text-secondary); margin-top: 0.15rem; }
+.tl-step.is-alert .tl-step-note { color: var(--ppsdk-danger); font-weight: 600; }
+.tl-step.is-active .tl-step-note { color: #E65100; font-weight: 600; }
+.tl-step-date { font-size: 0.7rem; color: var(--ppsdk-text-muted); }
+
+/* Stepper kecil (di daftar) */
+.tl-stepper.tl-sm { min-width: 190px; }
+.tl-stepper.tl-sm .tl-step { padding: 0; }
+.tl-stepper.tl-sm .tl-step::before { top: 11px; height: 3px; left: calc(-50% + 13px); width: calc(100% - 26px); }
+.tl-stepper.tl-sm .tl-step-dot { width: 24px; height: 24px; font-size: 0.6rem; border-width: 2px; }
+.tl-stepper.tl-sm .tl-step.is-done .tl-step-dot { box-shadow: 0 2px 6px rgba(46, 125, 50, 0.3); }
+
+@keyframes tlPulseWarn {
+    0%   { box-shadow: 0 0 0 0 rgba(245, 124, 0, 0.55); }
+    70%  { box-shadow: 0 0 0 12px rgba(245, 124, 0, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(245, 124, 0, 0); }
+}
+@keyframes tlPulseDanger {
+    0%   { box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.55); }
+    70%  { box-shadow: 0 0 0 12px rgba(229, 57, 53, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(229, 57, 53, 0); }
+}
+
+/* ---- Riwayat kejadian (vertikal) ---- */
+.tl-events { list-style: none; margin: 0; padding: 0; }
+.tl-year {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0.25rem 0 1rem;
+    padding: 0.3rem 0.85rem;
+    border-radius: 999px;
+    background: var(--ppsdk-primary);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.03em;
+}
+.tl-event {
+    position: relative;
+    padding-left: 62px;
+    padding-bottom: 1.1rem;
+    animation: tlFadeUp 0.45s ease both;
+}
+.tl-event::before {
+    content: '';
+    position: absolute;
+    left: 21px;
+    top: 46px;
+    bottom: 2px;
+    width: 2px;
+    background: linear-gradient(180deg, var(--ppsdk-border), transparent);
+}
+.tl-event:last-child::before { display: none; }
+.tl-event-icon {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--tl-soft);
+    color: var(--tl-color);
+    font-size: 1rem;
+    border: 1px solid color-mix(in srgb, var(--tl-color) 18%, transparent);
+}
+.tl-event-card {
+    display: block;
+    background: #fff;
+    border: 1px solid var(--ppsdk-border);
+    border-left: 3px solid var(--tl-color);
+    border-radius: var(--radius-md);
+    padding: 0.7rem 1rem;
+    color: inherit;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+a.tl-event-card:hover {
+    transform: translateX(4px);
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+    color: inherit;
+}
+.tl-event-title { font-weight: 700; color: var(--ppsdk-text); font-size: 0.9rem; }
+.tl-event-meta { font-size: 0.75rem; color: var(--ppsdk-text-muted); }
+.tl-event-desc { font-size: 0.8rem; color: var(--ppsdk-text-secondary); margin-top: 0.25rem; }
+.tl-stage-tag {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--tl-color);
+    background: var(--tl-soft);
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+}
+@keyframes tlFadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Badge status */
+.tl-badge {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+.tl-badge-draft, .tl-badge-belum-dilaksanakan, .tl-badge-default { background: #F3F4F6; color: #4B5563; }
+.tl-badge-proses, .tl-badge-sedang-berjalan, .tl-badge-terlambat { background: #FFF3E0; color: #E65100; }
+.tl-badge-selesai, .tl-badge-tepat-waktu { background: #E8F5E9; color: #2E7D32; }
+.tl-badge-tindak-lanjut, .tl-badge-tidak-menyampaikan-laporan, .tl-badge-sp, .tl-badge-dibatalkan { background: #FFEBEE; color: #C62828; }
+
+/* ---- Kartu ringkasan tahap (index) ---- */
+.tl-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.75rem;
+}
+.tl-summary-card {
+    position: relative;
+    display: block;
+    padding: 0.9rem 1rem;
+    background: #fff;
+    border: 1px solid var(--ppsdk-border);
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    color: var(--ppsdk-text);
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.tl-summary-card::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 3px;
+    background: var(--tl-color);
+    opacity: 0.85;
+}
+.tl-summary-card:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08); color: var(--ppsdk-text); }
+.tl-summary-card.active { border-color: var(--tl-color); box-shadow: 0 0 0 3px var(--tl-soft); }
+.tl-summary-card .tl-summary-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--tl-soft); color: var(--tl-color);
+}
+.tl-summary-card .tl-summary-count { font-size: 1.6rem; font-weight: 800; line-height: 1; }
+.tl-summary-card .tl-summary-label { font-size: 0.75rem; font-weight: 600; color: var(--ppsdk-text-secondary); }
+
+/* Progress ring (show) */
+.tl-ring {
+    --p: 0;
+    width: 104px;
+    height: 104px;
+    border-radius: 50%;
+    background: conic-gradient(#2E7D32 calc(var(--p) * 1%), var(--ppsdk-border) 0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.tl-ring-inner {
+    width: 82px;
+    height: 82px;
+    border-radius: 50%;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.tl-ring-inner strong { font-size: 1.4rem; font-weight: 800; color: var(--ppsdk-text); line-height: 1; }
+.tl-ring-inner span { font-size: 0.65rem; color: var(--ppsdk-text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+.tl-progress { height: 6px; border-radius: 6px; background: var(--ppsdk-border); overflow: hidden; }
+.tl-progress > div { height: 100%; border-radius: 6px; background: linear-gradient(90deg, #43A047, #2E7D32); transition: width 0.6s ease; }

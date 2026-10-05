@@ -123,37 +123,31 @@
                 </div>
             </div>
 
-            {{-- Riwayat --}}
+            {{-- Progres & Riwayat Pengawasan --}}
             <div class="col-lg-6 col-12">
                 <div class="card card-primary card-outline h-100" style="animation-delay: 0.15s">
-                    <div class="card-header"><h3 class="card-title"><i class="fas fa-history me-2 text-primary"></i>Riwayat Pengawasan</h3></div>
-                    <div class="card-body p-0" style="max-height: 350px; overflow-y: auto;">
-                        <ul class="list-group list-group-flush">
-                            @forelse($pelakuUsaha->baWasPrls->concat($pelakuUsaha->baWasAlses)->sortByDesc('tanggal_pengawasan') as $ba)
-                                @php
-                                    $isPrl = isset($ba->metode_pengamatan); // or specific check
-                                    $link = request()->routeIs('*prl*') ? route('ba-was-prl.show', $ba->id) : '#'; 
-                                    // Actually better to check class name or relation type
-                                    $tipe = str_contains($ba->nomor_ba, 'PRL') ? 'PRL' : 'ALSE';
-                                @endphp
-                                <li class="list-group-item py-3">
-                                    <div class="d-flex justify-content-between align-items-start mb-1">
-                                        <div class="fw-bold text-primary">{{ $ba->nomor_ba }}</div>
-                                        <span class="badge bg-secondary" style="font-size: 0.7rem;">{{ ucwords(str_replace('_',' ',$ba->status)) }}</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center text-sm text-muted">
-                                        <span><i class="far fa-calendar-alt me-1"></i>{{ $ba->tanggal_pengawasan->format('d/m/Y') }}</span>
-                                        <span class="badge bg-info-soft text-info">{{ $tipe }}</span>
-                                    </div>
-                                </li>
-                            @empty
-                                <li class="list-group-item text-center py-4 text-muted">
-                                    <i class="fas fa-clipboard-check fa-2x mb-2 opacity-50"></i><br>Belum ada riwayat pengawasan.
-                                </li>
-                            @endforelse
-                        </ul>
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3 class="card-title"><i class="fas fa-history me-2 text-primary"></i>Riwayat Pengawasan</h3>
+                        <span class="badge bg-light text-dark border">{{ $timeline['progress'] }}% · {{ $timeline['current_label'] }}</span>
+                    </div>
+                    <div class="card-body" style="max-height: 350px; overflow-y: auto;">
+                        <x-timeline-events :events="$timeline['events']" :limit="5" />
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div class="card card-primary card-outline mt-4" style="animation-delay: 0.2s">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h3 class="card-title"><i class="fas fa-timeline me-2 text-primary"></i>Progres Tahapan Pengawasan</h3>
+                @can('kelola-pengawasan')
+                    <a href="{{ route('timeline-pengawasan.show', $pelakuUsaha->id) }}" class="btn btn-sm btn-outline-primary ms-auto">
+                        <i class="fas fa-up-right-from-square me-1"></i> Lihat Timeline Lengkap
+                    </a>
+                @endcan
+            </div>
+            <div class="card-body">
+                <x-timeline-stepper :stages="$timeline['stages']" />
             </div>
         </div>
     </div>

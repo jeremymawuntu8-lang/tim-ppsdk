@@ -87,6 +87,16 @@ class PelakuUsaha extends Model
         return $this->hasMany(JadwalPengawasan::class);
     }
 
+    public function pengawasanTidakLangsungs()
+    {
+        return $this->hasMany(PengawasanTidakLangsung::class);
+    }
+
+    public function suratPeringatans()
+    {
+        return $this->hasMany(SuratPeringatan::class);
+    }
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');

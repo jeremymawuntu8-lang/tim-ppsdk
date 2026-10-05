@@ -86,9 +86,14 @@ class PelakuUsahaController extends Controller
 
     public function show(PelakuUsaha $pelakuUsaha)
     {
-        $pelakuUsaha->load(['jenisUsaha', 'provinsi', 'kabupaten', 'kecamatan', 'kelurahan', 'dokumens', 'baWasPrls', 'baWasAlses']);
+        $pelakuUsaha->load(array_merge(
+            ['jenisUsaha', 'provinsi', 'kabupaten', 'kecamatan', 'kelurahan', 'dokumens'],
+            \App\Services\TimelinePengawasanService::eagerLoads(true)
+        ));
 
-        return view('pelaku-usaha.show', compact('pelakuUsaha'));
+        $timeline = app(\App\Services\TimelinePengawasanService::class)->build($pelakuUsaha);
+
+        return view('pelaku-usaha.show', compact('pelakuUsaha', 'timeline'));
     }
 
     public function edit(PelakuUsaha $pelakuUsaha)

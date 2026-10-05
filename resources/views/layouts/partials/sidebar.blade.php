@@ -54,7 +54,7 @@
 
                 {{-- Pengawasan --}}
                 @can('kelola-pengawasan')
-                <li class="nav-item {{ request()->routeIs(['ba-was-prl.*','ba-was-alse.*','ba-reklamasi.*','ba-ppk.*','ba-pencemaran.*','pengawasan-tidak-langsung.*','jadwal.*','monitoring.*','arsip-dokumen-ba.*']) ? 'menu-open' : '' }}">
+                <li class="nav-item {{ request()->routeIs(['ba-was-prl.*','ba-was-alse.*','ba-reklamasi.*','ba-ppk.*','ba-pencemaran.*','pengawasan-tidak-langsung.*','jadwal.*','monitoring.*','arsip-dokumen-ba.*','timeline-pengawasan.*']) ? 'menu-open' : '' }}">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-magnifying-glass"></i>
                         <p>Pengawasan <i class="nav-arrow fas fa-angle-left"></i></p>
@@ -100,6 +100,12 @@
                             <a href="{{ route('jadwal.index') }}" class="nav-link {{ request()->routeIs('jadwal.*') ? 'active' : '' }}">
                                 <i class="fas fa-calendar-days nav-icon"></i>
                                 <p>Jadwal Pengawasan</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('timeline-pengawasan.index') }}" class="nav-link {{ request()->routeIs('timeline-pengawasan.*') ? 'active' : '' }}">
+                                <i class="fas fa-timeline nav-icon text-info"></i>
+                                <p>Timeline Pengawasan</p>
                             </a>
                         </li>
                         <li class="nav-item">
