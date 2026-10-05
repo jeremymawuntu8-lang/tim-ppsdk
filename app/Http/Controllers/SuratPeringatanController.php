@@ -28,10 +28,11 @@ class SuratPeringatanController extends Controller
                     return $row->pelakuUsaha ? $row->pelakuUsaha->nama_perusahaan : ($row->contact_person ?? '-');
                 })
                 ->addColumn('action', function($row) {
-                    $editBtn = '<a href="'.route('surat-peringatan.edit', $row->id).'" class="btn btn-sm btn-primary" title="Edit"><i class="fas fa-edit"></i></a>';
+                    $detailBtn = '<a href="'.route('surat-peringatan.show', $row->id).'" class="btn btn-sm btn-info" title="Detail"><i class="fas fa-eye"></i></a>';
+                    $editBtn = '<a href="'.route('surat-peringatan.edit', $row->id).'" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a>';
                     $deleteBtn = '<button type="button" class="btn btn-sm btn-danger delete-btn" data-id="'.$row->id.'" title="Hapus"><i class="fas fa-trash"></i></button>';
                     
-                    return '<div class="d-flex gap-1 justify-content-center">'.$editBtn.$deleteBtn.'</div>';
+                    return '<div class="d-flex gap-1 justify-content-center">'.$detailBtn.$editBtn.$deleteBtn.'</div>';
                 })
                 ->rawColumns(['action'])
                 ->make(true);
@@ -100,8 +101,8 @@ class SuratPeringatanController extends Controller
             return redirect()->route('surat-peringatan.index')->with('info', 'Halaman yang Anda tuju telah digabungkan ke menu utama Surat Peringatan.');
         }
         
-        // Fitur show detail belum diimplementasikan, kembalikan ke index
-        return redirect()->route('surat-peringatan.index');
+        $spsatu = SuratPeringatan::findOrFail($id);
+        return view('surat-peringatan.show', compact('spsatu'));
     }
 
     public function edit($id)

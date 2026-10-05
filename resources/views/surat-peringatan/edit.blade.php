@@ -39,10 +39,6 @@
                     </div>
                 </form>
             </div>
-            
-            <div class="mt-4">
-                <x-arsip-dokumen-ba :arsipable="$spsatu" tipeBa="surat-peringatan" />
-            </div>
         </div>
     </div>
 </div>
