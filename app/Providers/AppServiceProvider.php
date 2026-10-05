@@ -17,6 +17,7 @@ use App\Observers\BaMasterDataSyncObserver;
 use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -28,6 +29,7 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Paginator::useBootstrapFive();
         Gate::policy(PelakuUsaha::class, PelakuUsahaPolicy::class);
         Gate::policy(BaWasPrl::class, BaWasPrlPolicy::class);
         Gate::policy(BaWasAlse::class, BaWasAlsePolicy::class);
