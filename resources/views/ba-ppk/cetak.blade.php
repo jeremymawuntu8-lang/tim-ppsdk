@@ -72,9 +72,9 @@
 
 <h1 class="doc-title">
     BERITA ACARA <br>
-    PENGAWASAN PEMANFAATAN PULAU-PULAU KECIL <br>
+    PENGAWASAN PEMANFAATAN PULAU-PULAU KECIL
     @if(!empty($baPpk->nomor_ba))
-        <span>Nomor. {{ $baPpk->nomor_ba }}</span>
+        <br><span>Nomor. {{ $baPpk->nomor_ba }}</span>
     @endif
 </h1>
 
