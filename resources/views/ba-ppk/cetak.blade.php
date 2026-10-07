@@ -72,8 +72,14 @@
 
 <h1 class="doc-title">
     BERITA ACARA <br>
-    PENGAWASAN PEMANFAATAN PULAU-PULAU KECIL
-    @if(!empty($baPpk->nomor_ba))<br><span>Nomor. {{ $baPpk->nomor_ba }}</span>@endif
+    PENGAWASAN PEMANFAATAN PULAU-PULAU KECIL<br>
+    <span>
+    @if(!empty($baPpk->nomor_ba))
+        Nomor. {{ $baPpk->nomor_ba }}
+    @else
+        &nbsp;
+    @endif
+    </span>
 </h1>
 
 <table class="kv-plain" style="margin-bottom: 0;">
