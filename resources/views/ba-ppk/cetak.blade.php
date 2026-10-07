@@ -100,8 +100,8 @@
         <tr>
             <th class="col-no">No.</th>
             <th>Nama</th>
-            <th style="width:130px;">NIP/No. KTA</th>
-            <th style="width:130px;">Jabatan</th>
+            <th style="width:185px; white-space:nowrap;">NIP/No. KTA</th>
+            <th style="width:110px;">Jabatan</th>
         </tr>
     </thead>
     <tbody>
@@ -109,7 +109,7 @@
         <tr>
             <td class="col-no">{{ $i + 1 }}.</td>
             <td>{{ $pg->nama }}</td>
-            <td>{{ $orDash($pg->nip) }}</td>
+            <td style="white-space:nowrap;">{{ $orDash($pg->nip) }}</td>
             <td>{{ $pg->jabatan }}</td>
         </tr>
         @empty
