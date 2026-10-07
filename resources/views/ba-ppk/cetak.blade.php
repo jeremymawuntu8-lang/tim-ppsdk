@@ -72,7 +72,8 @@
 
 <h1 class="doc-title" @if(empty($baPpk->nomor_ba)) style="margin-bottom: 4px;" @endif>
     BERITA ACARA <br>
-    PENGAWASAN PEMANFAATAN PULAU-PULAU KECIL@if(!empty($baPpk->nomor_ba))<br><span>Nomor. {{ $baPpk->nomor_ba }}</span>@endif
+    PENGAWASAN PEMANFAATAN PULAU-PULAU KECIL
+    @if(!empty($baPpk->nomor_ba))<br><span>Nomor. {{ $baPpk->nomor_ba }}</span>@endif
 </h1>
 
 <table class="kv-plain" style="margin-bottom: 0;">
