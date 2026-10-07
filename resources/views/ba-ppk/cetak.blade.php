@@ -10,7 +10,7 @@
         tr { page-break-inside: avoid; page-break-after: auto; }
         thead { display: table-header-group; }
         tfoot { display: table-footer-group; }
-        body { font-family: Arial, sans-serif; font-size: 9.5pt; color: #000; line-height: 1.35; }
+        body { font-family: 'DejaVu Sans', Arial, sans-serif; font-size: 9.5pt; color: #000; line-height: 1.35; }
         p { margin: 4px 0; text-align: justify; }
         h1.doc-title { text-align: center; font-size: 11pt; font-weight: bold; margin: 4px 0 12px; line-height: 1.3; }
         h1.doc-title span { display: block; font-weight: normal; font-size: 10pt; }
