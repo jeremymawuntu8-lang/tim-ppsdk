@@ -70,7 +70,7 @@
 
 @include('ba-was-prl.partials.kop-surat') <!-- Using ALSE's KOP for similarity -->
 
-<h1 class="doc-title" @if(empty($baPpk->nomor_ba)) style="margin-bottom: 4px;" @endif>
+<h1 class="doc-title">
     BERITA ACARA <br>
     PENGAWASAN PEMANFAATAN PULAU-PULAU KECIL
     @if(!empty($baPpk->nomor_ba))<br><span>Nomor. {{ $baPpk->nomor_ba }}</span>@endif
