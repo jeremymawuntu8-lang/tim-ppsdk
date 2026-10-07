@@ -17,7 +17,7 @@ class BaWasAlseRequest extends FormRequest
         $id = $this->route('ba_was_alse')?->id;
 
         return [
-            'nomor_ba' => ['required', 'string', 'max:100', Rule::unique('ba_was_alses', 'nomor_ba')->ignore($id)],
+            'nomor_ba' => ['nullable', 'string', 'max:100'],
             'pelaku_usaha_id' => ['nullable'],
             'provinsi_id' => ['nullable', 'exists:provinsis,id'],
             'tanggal_pengawasan' => ['required', 'date'],
@@ -100,8 +100,6 @@ class BaWasAlseRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'nomor_ba.required' => 'Nomor BA wajib diisi.',
-            'nomor_ba.unique' => 'Nomor BA sudah digunakan.',
             'tanggal_pengawasan.required' => 'Tanggal pengawasan wajib diisi.',
             'file_ba_pdf.mimes' => 'File BA harus berformat PDF.',
             'foto.*.image' => 'Foto dokumentasi harus berupa gambar.',

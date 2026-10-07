@@ -70,11 +70,15 @@
 
 @include('ba-was-prl.partials.kop-surat') <!-- Using ALSE's KOP for similarity -->
 
-<h1 class="doc-title">
-    BERITA ACARA <br>
-    PENGAWASAN PEMANFAATAN PULAU-PULAU KECIL <br>
-    <span>Nomor. {{ $baPpk->nomor_ba }}</span>
-</h1>
+<div style="text-align: center; margin-bottom: 12px;">
+    <h1 class="doc-title" style="margin-bottom: 4px;">
+        BERITA ACARA <br>
+        PENGAWASAN PEMANFAATAN PULAU-PULAU KECIL
+    </h1>
+    <div style="font-size: 10pt; text-align: center; padding-right: 120px;">
+        Nomor. {{ $baPpk->nomor_ba ?? '..........................................................' }}
+    </div>
+</div>
 
 <table class="kv-plain" style="margin-bottom: 0;">
     <tr>

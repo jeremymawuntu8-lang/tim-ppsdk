@@ -55,8 +55,8 @@
     <div class="tab-pane fade show active" id="tab-utama">
         <div class="row g-3">
             <div class="col-md-6 col-12">
-                <label class="form-label">Nomor BA <span class="text-danger">*</span></label>
-                <input type="text" name="nomor_ba" class="form-control" value="{{ old('nomor_ba', $ba->nomor_ba ?? '') }}" required>
+                <label class="form-label">Nomor BA <small class="text-muted">(Opsional, bisa diisi nanti)</small></label>
+                <input type="text" name="nomor_ba" class="form-control" value="{{ old('nomor_ba', $ba->nomor_ba ?? '') }}">
             </div>
             <div class="col-md-6 col-12">
                 <label class="form-label">Unit Kerja <small class="text-muted">(Nama UPT/Satwas/Wilker)</small></label>

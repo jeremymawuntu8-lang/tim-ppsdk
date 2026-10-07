@@ -22,7 +22,7 @@ class BaPpkRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nomor_ba' => ['required', 'string', 'max:255', 'unique:ba_ppks,nomor_ba,' . ($this->ba_ppk ? $this->ba_ppk->id : 'null')],
+            'nomor_ba' => ['nullable', 'string', 'max:255'],
             'pelaku_usaha_id' => ['nullable', 'string', 'max:255'],
             'unit_kerja' => ['nullable', 'string', 'max:255'],
             'tanggal_pengawasan' => ['required', 'date'],
