@@ -22,7 +22,7 @@ class BaReklamasiRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nomor_ba' => ['nullable', 'string', 'max:255'],
+            'nomor_ba' => ['required', 'string', 'max:255', 'unique:ba_reklamasis,nomor_ba,' . ($this->ba_reklamasi ? $this->ba_reklamasi->id : 'null')],
             'pelaku_usaha_id' => ['nullable', 'string', 'max:255'],
             'tanggal_pengawasan' => ['required', 'date'],
             'jam_wita' => ['nullable'],

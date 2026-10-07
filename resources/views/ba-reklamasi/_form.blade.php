@@ -42,7 +42,7 @@
         <div class="row g-3">
             <div class="col-md-6 col-12">
                 <label class="form-label">Nomor BA <span class="text-danger">*</span></label>
-                <input type="text" name="nomor_ba" class="form-control" value="{{ old('nomor_ba', $baReklamasi->nomor_ba ?? '') }}">
+                <input type="text" name="nomor_ba" class="form-control" value="{{ old('nomor_ba', $baReklamasi->nomor_ba ?? '') }}" required>
             </div>
             <div class="col-md-6 col-12">
                 <label class="form-label">Pelaku Usaha Utama (Opsional)</label>
