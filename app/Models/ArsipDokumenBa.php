@@ -110,6 +110,10 @@ class ArsipDokumenBa extends Model
      */
     public function getNamaTipeBaAttribute(): string
     {
+        if (!$this->arsipable_type) {
+            return 'Arsip Tanpa ID';
+        }
+
         return match ($this->arsipable_type) {
             BaWasPrl::class => 'BA WAS PRL',
             BaWasAlse::class => 'BA WAS ALSE',
