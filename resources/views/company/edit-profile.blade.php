@@ -92,7 +92,21 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('company.profil.update') }}" enctype="multipart/form-data" id="uploadForm">
+            @if($company->isPending())
+                <div class="alert alert-info border-0 shadow-sm d-flex align-items-center p-4" style="border-radius: 12px; background-color: #e0f2fe;">
+                    <i class="fas fa-info-circle fs-1 text-primary me-4"></i>
+                    <div>
+                        <h5 class="fw-bold text-primary mb-1">Dokumen Sedang Diperiksa</h5>
+                        <p class="mb-0 text-dark">Data profil dan dokumen Anda saat ini sedang diverifikasi oleh admin. Anda tidak dapat melakukan perubahan atau mengunggah dokumen baru sampai proses verifikasi selesai.</p>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <a href="{{ route('company.dashboard') }}" class="btn btn-outline-primary rounded-pill px-4">
+                        <i class="fas fa-arrow-left me-2"></i> Kembali ke Dashboard
+                    </a>
+                </div>
+            @else
+                <form method="POST" action="{{ route('company.profil.update') }}" enctype="multipart/form-data" id="uploadForm">
                 @csrf
                 @method('PUT')
 
@@ -231,6 +245,7 @@
                     </button>
                 </div>
             </form>
+            @endif
         </div>
     </div>
 </div>

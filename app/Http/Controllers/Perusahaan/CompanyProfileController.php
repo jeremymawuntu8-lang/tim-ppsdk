@@ -106,6 +106,10 @@ class CompanyProfileController extends Controller
             return redirect()->route('company.complete-profile');
         }
 
+        if ($company->isPending()) {
+            return redirect()->back()->with('error', 'Profil tidak dapat diubah karena sedang dalam proses verifikasi.');
+        }
+
         $data = $request->validate([
             'nama_perusahaan'          => ['required', 'string', 'max:255'],
             'tanggal'                  => ['required', 'date'],
