@@ -87,11 +87,11 @@
                             <div class="row g-3 mb-4">
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold text-dark">Nama Dokumen</label>
-                                    <input type="text" class="form-control" name="nama_dokumen" placeholder="Contoh: Bahan Paparan, dll">
+                                    <input type="text" class="form-control" name="nama_dokumen" id="inputNamaDokumen" placeholder="Contoh: Bahan Paparan, dll">
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-6" id="wrapperUploadFile" style="display: none;">
                                     <label class="form-label fw-semibold text-dark">Upload File</label>
-                                    <input type="file" class="form-control" name="file">
+                                    <input type="file" class="form-control" name="file" id="inputFileUpload">
                                 </div>
                             </div>
 
@@ -265,6 +265,16 @@
             li.nextUntil(':has(.tl-year)').each(function () { if ($(this).is(':visible')) visible = true; });
             li.toggle(visible);
         });
+    });
+
+    // Wajib isi Nama Dokumen sebelum bisa upload file
+    $('#inputNamaDokumen').on('input', function() {
+        if ($(this).val().trim() !== '') {
+            $('#wrapperUploadFile').fadeIn();
+        } else {
+            $('#wrapperUploadFile').fadeOut();
+            $('#inputFileUpload').val(''); // Reset file jika input nama dihapus
+        }
     });
 </script>
 @endpush
