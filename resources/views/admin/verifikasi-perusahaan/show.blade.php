@@ -175,6 +175,45 @@
     </div>
 </div> <!-- End of fade-in row -->
 
+{{-- Dokumen Lanjutan / Tambahan --}}
+@if($company->documents->isNotEmpty())
+    <div class="card shadow-sm border-0 mb-4 mt-2" style="border-radius: 16px;">
+        <div class="card-header bg-white border-bottom pt-4 pb-3">
+            <h5 class="card-title fw-bold m-0" style="color: #0A3D6B;"><i class="fas fa-folder-open me-2"></i> Dokumen Lanjutan (Tambahan)</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-muted small">
+                        <tr>
+                            <th class="ps-4">No</th>
+                            <th>Judul Dokumen</th>
+                            <th>Keterangan</th>
+                            <th>Tanggal Diunggah</th>
+                            <th class="text-center pe-4">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($company->documents as $index => $doc)
+                            <tr>
+                                <td class="ps-4 text-muted">{{ $index + 1 }}</td>
+                                <td class="fw-bold text-dark">{{ $doc->judul }}</td>
+                                <td>{{ $doc->keterangan ?: '-' }}</td>
+                                <td class="text-muted small">{{ $doc->created_at->format('d/m/Y H:i') }} WIB</td>
+                                <td class="text-center pe-4">
+                                    <a href="{{ route('company.document.download', $doc->id) }}" class="btn btn-sm btn-outline-info rounded-pill" target="_blank">
+                                        <i class="fas fa-download me-1"></i> Unduh
+                                    </a>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+@endif
+
 @push('modals')
             {{-- Modal Approve --}}
             <div class="modal fade" id="modalApprove" tabindex="-1" aria-hidden="true">
