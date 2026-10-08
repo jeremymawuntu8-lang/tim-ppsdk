@@ -125,8 +125,8 @@ class ArsipDokumenBaController extends Controller
         );
 
         $data = $request->validate([
-            'arsipable_type' => ['required', 'string', 'in:' . implode(',', array_keys(self::BA_MODELS))],
-            'arsipable_id'   => ['required', 'integer'],
+            'arsipable_type' => ['nullable', 'string', 'in:' . implode(',', array_keys(self::BA_MODELS))],
+            'arsipable_id'   => ['nullable', 'integer'],
             'tipe'           => ['required', 'in:file,link'],
             'judul'          => ['nullable', 'string', 'max:255'],
             'keterangan'     => ['nullable', 'string', 'max:1000'],
@@ -136,8 +136,14 @@ class ArsipDokumenBaController extends Controller
             'link_gdrive'    => ['required_if:tipe,link', 'nullable', 'string', 'max:2048'],
         ]);
 
-        $modelClass = self::BA_MODELS[$data['arsipable_type']];
-        $ba = $modelClass::findOrFail($data['arsipable_id']);
+        $modelClass = null;
+        $baId = null;
+
+        if (!empty($data['arsipable_type']) && !empty($data['arsipable_id'])) {
+            $modelClass = self::BA_MODELS[$data['arsipable_type']];
+            $ba = $modelClass::findOrFail($data['arsipable_id']);
+            $baId = $ba->id;
+        }
 
         if ($data['tipe'] === 'link') {
             $rawLink = trim($data['link_gdrive']);
@@ -147,7 +153,7 @@ class ArsipDokumenBaController extends Controller
 
             $arsip = new ArsipDokumenBa();
             $arsip->arsipable_type = $modelClass;
-            $arsip->arsipable_id = $ba->id;
+            $arsip->arsipable_id = $baId;
             $arsip->tipe = 'link';
             $arsip->judul = !empty($data['judul']) ? $data['judul'] : 'Folder Arsip Dokumen Google Drive';
             $arsip->keterangan = $data['keterangan'] ?? null;
@@ -176,7 +182,7 @@ class ArsipDokumenBaController extends Controller
         foreach ($filesToSave as $index => $file) {
             $arsip = new ArsipDokumenBa();
             $arsip->arsipable_type = $modelClass;
-            $arsip->arsipable_id = $ba->id;
+            $arsip->arsipable_id = $baId;
             $arsip->tipe = 'file';
 
             if (!empty($data['judul'])) {

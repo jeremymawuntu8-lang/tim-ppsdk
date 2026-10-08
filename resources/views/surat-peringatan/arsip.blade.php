@@ -235,8 +235,8 @@
 
                         {{-- Pilih Record SP --}}
                         <div class="col-12">
-                            <label class="form-label fw-semibold">Pilih ID Penerbitan Terkait <span class="text-danger">*</span></label>
-                            <select name="arsipable_id" id="selectRecordBaPusat" class="form-select" required>
+                            <label class="form-label fw-semibold">Pilih ID Penerbitan Terkait (Opsional)</label>
+                            <select name="arsipable_id" id="selectRecordBaPusat" class="form-select">
                                 <option value="">-- Pilih ID Penerbitan --</option>
                                 @foreach($spList as $sp)
                                     <option value="{{ $sp->id }}">{{ $sp->nomor_ba }}</option>
