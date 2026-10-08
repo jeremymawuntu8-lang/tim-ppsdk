@@ -32,9 +32,12 @@
                             ->where('tanggal_rencana', '>=', now()->startOfWeek())
                             ->where('tanggal_rencana', '<=', now()->endOfWeek())
                             ->count();
+                        
+                        $newDocCount = \App\Models\CompanyDocument::whereDate('created_at', today())->count();
+                        $totalNotif = $jadwalCount + $newDocCount;
                     @endphp
-                    @if($jadwalCount > 0)
-                        <span class="badge bg-danger navbar-badge">{{ $jadwalCount }}</span>
+                    @if($totalNotif > 0)
+                        <span class="badge bg-danger navbar-badge">{{ $totalNotif }}</span>
                     @endif
                 </a>
                 <div class="dropdown-menu dropdown-menu-end" style="min-width: 280px;">
@@ -47,7 +50,15 @@
                             <i class="fas fa-calendar-alt me-2 text-warning"></i>
                             <span>{{ $jadwalCount }} jadwal pengawasan minggu ini</span>
                         </a>
-                    @else
+                    @endif
+                    @if($newDocCount > 0)
+                        <a href="{{ route('admin.verifikasi-perusahaan.index', ['status' => 'active']) }}" class="dropdown-item py-2">
+                            <i class="fas fa-file-upload me-2 text-info"></i>
+                            <span>{{ $newDocCount }} dokumen tambahan hari ini</span>
+                        </a>
+                    @endif
+                    
+                    @if($totalNotif == 0)
                         <div class="dropdown-item-text text-muted py-2 text-center" style="font-size: 0.82rem;">
                             <i class="fas fa-check-circle me-1"></i> Tidak ada notifikasi baru
                         </div>

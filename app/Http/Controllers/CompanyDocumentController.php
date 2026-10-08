@@ -37,6 +37,13 @@ class CompanyDocumentController extends Controller
             'path_file' => $path
         ]);
 
+        ActivityLog::create([
+            'user_id' => auth()->id(),
+            'action' => 'Upload Dokumen Lanjutan',
+            'description' => 'Perusahaan ' . $company->nama_perusahaan . ' mengunggah dokumen lanjutan: ' . $request->judul,
+            'ip_address' => $request->ip()
+        ]);
+
         return back()->with('success', 'Dokumen berhasil diunggah.');
     }
 
