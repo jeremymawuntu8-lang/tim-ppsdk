@@ -72,10 +72,10 @@ Route::middleware(['auth'])->prefix('company')->name('company.')->group(function
 
     // Fitur Utama Perusahaan (Harus sudah ACTIVE)
     Route::middleware('company.active')->group(function () {
-        // Karena sistem yang lama blm punya upload spesifik dr perusahaan, kita arahkan ke halaman dummy sementara, atau nnti bisa diintegrasikan dg tabel dokumen
-        Route::get('upload', function() {
-            return view('company.upload');
-        })->name('upload');
+        Route::get('upload', [App\Http\Controllers\CompanyDocumentController::class, 'index'])->name('upload');
+        Route::post('upload', [App\Http\Controllers\CompanyDocumentController::class, 'store'])->name('upload.store');
+        Route::get('document/{document}/download', [App\Http\Controllers\CompanyDocumentController::class, 'download'])->name('document.download');
+        Route::delete('document/{document}', [App\Http\Controllers\CompanyDocumentController::class, 'destroy'])->name('document.destroy');
     });
 });
 

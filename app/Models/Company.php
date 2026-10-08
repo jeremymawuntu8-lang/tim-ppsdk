@@ -46,6 +46,14 @@ class Company extends Model
     }
 
     /**
+     * Relasi ke dokumen lanjutan.
+     */
+    public function documents()
+    {
+        return $this->hasMany(CompanyDocument::class);
+    }
+
+    /**
      * Admin yang memverifikasi.
      */
     public function verifiedBy()
