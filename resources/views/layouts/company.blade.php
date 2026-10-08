@@ -28,19 +28,26 @@
         .company-sidebar .brand img { max-height: 50px; }
         .company-sidebar .nav-link {
             color: rgba(255,255,255,0.75);
-            padding: 0.75rem 1.5rem;
+            padding: 0.85rem 1.5rem;
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            transition: all 0.2s;
+            transition: all 0.25s ease;
             border-radius: 0;
+            position: relative;
+            overflow: hidden;
         }
-        .company-sidebar .nav-link:hover,
-        .company-sidebar .nav-link.active {
-            background: rgba(255,255,255,0.12);
+        .company-sidebar .nav-link:hover {
             color: #fff;
+            background: rgba(255,255,255,0.08);
+            transform: translateX(5px);
         }
-        .company-sidebar .nav-link i { width: 20px; text-align: center; }
+        .company-sidebar .nav-link.active {
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            border-left: 4px solid #fff;
+        }
+        .company-sidebar .nav-link i { width: 22px; text-align: center; font-size: 1.1rem; }
         .main-content {
             margin-left: 260px;
             min-height: 100vh;
@@ -96,6 +103,16 @@
         <a href="{{ route('company.profil.edit') }}" class="nav-link {{ request()->routeIs('company.profil.edit') ? 'active' : '' }}">
             <i class="fas fa-building"></i> Profil Perusahaan
         </a>
+        
+        <div class="px-3 mt-4 mb-2">
+            <span class="text-white-50 text-xs fw-bold text-uppercase" style="font-size:0.7rem;">Akun</span>
+        </div>
+        <a href="{{ route('logout') }}" class="nav-link text-danger" onclick="event.preventDefault(); document.getElementById('logout-form-company').submit();">
+            <i class="fas fa-sign-out-alt"></i> Keluar
+        </a>
+        <form id="logout-form-company" action="{{ route('logout') }}" method="POST" class="d-none">
+            @csrf
+        </form>
     </nav>
 
     <div class="p-3 border-top" style="border-color: rgba(255,255,255,0.1) !important;">
