@@ -67,6 +67,7 @@ class BaPencemaranController extends Controller
 
         foreach ($request->input('pengawas', []) as $p) {
             if (!empty($p['nama'])) {
+                $p['tanda_tangan'] = $this->simpanTandaTangan($p['tanda_tangan'] ?? null);
                 $ba->pengawas()->create($p);
             }
         }
@@ -117,6 +118,7 @@ class BaPencemaranController extends Controller
         $baPencemaran->pengawas()->delete();
         foreach ($request->input('pengawas', []) as $p) {
             if (!empty($p['nama'])) {
+                $p['tanda_tangan'] = $this->simpanTandaTangan($p['tanda_tangan'] ?? null);
                 $baPencemaran->pengawas()->create($p);
             }
         }

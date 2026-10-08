@@ -158,6 +158,10 @@ Route::middleware(['auth', 'active', 'internal'])->group(function () {
         // Timeline progres pengawasan per Pelaku Usaha
         Route::get('timeline-pengawasan', [TimelinePengawasanController::class, 'index'])->name('timeline-pengawasan.index');
         Route::get('timeline-pengawasan/{pelakuUsaha}', [TimelinePengawasanController::class, 'show'])->name('timeline-pengawasan.show');
+
+        Route::post('timeline-tahapan/{pelakuUsaha}/upload', [\App\Http\Controllers\Pengawasan\TimelineTahapanController::class, 'upload'])->name('timeline-tahapan.upload');
+        Route::post('timeline-tahapan/{pelakuUsaha}/status', [\App\Http\Controllers\Pengawasan\TimelineTahapanController::class, 'updateStatus'])->name('timeline-tahapan.status');
+        Route::delete('timeline-tahapan-file/{file}', [\App\Http\Controllers\Pengawasan\TimelineTahapanController::class, 'deleteFile'])->name('timeline-tahapan-file.destroy');
     });
 
     // Dokumen (kelola-dokumen)

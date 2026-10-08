@@ -393,9 +393,9 @@
     </tr>
 </table>
 
-<table class="ttd-table" cellpadding="0" cellspacing="0">
+<table class="ttd-table" cellpadding="0" cellspacing="0" style="width: 100%;">
     <tr>
-        <td>
+        <td style="width: 50%; vertical-align: top;">
             Pelaku Usaha
             <br><br><br>
             @if($baPpk->ttd_pelaku_usaha && $ttdSrc($baPpk->ttd_pelaku_usaha))
@@ -407,19 +407,22 @@
             <span style="text-decoration:underline;">({{ $orDash($baPpk->nama_pj) }})</span><br>
             NIK. {{ $orDash($baPpk->nik_pj) }}
         </td>
-        <td>
-            Polsus PWP-3-K
+        <td style="width: 50%; vertical-align: top;">
+            Polsus PWP-3-K / Pengawas
             <br><br><br>
-            @if($baPpk->ttd_pengawas_1 && $ttdSrc($baPpk->ttd_pengawas_1))
-                <img src="{{ $ttdSrc($baPpk->ttd_pengawas_1) }}" style="max-height:70px; max-width:140px;">
-            @else
-                <div style="height:70px;"></div>
-            @endif
-            <br>
-            <span style="text-decoration:underline;">
-                ({{ $baPpk->pengawas->first()->nama ?? '..........................' }})
-            </span><br>
-            NIP/KTA. {{ $baPpk->pengawas->first()->nip ?? '..........................' }}
+            @foreach($baPpk->pengawas as $idx => $pg)
+                <div style="margin-bottom: 20px;">
+                    @if($pg->tanda_tangan && $ttdSrc($pg->tanda_tangan))
+                        <img src="{{ $ttdSrc($pg->tanda_tangan) }}" style="max-height:70px; max-width:140px;"><br>
+                    @else
+                        <div style="height:40px;"></div>
+                    @endif
+                    <span style="text-decoration:underline;">
+                        ({{ $pg->nama ?: '..........................' }})
+                    </span><br>
+                    NIP/KTA. {{ $pg->nip ?: '..........................' }}
+                </div>
+            @endforeach
         </td>
     </tr>
 </table>

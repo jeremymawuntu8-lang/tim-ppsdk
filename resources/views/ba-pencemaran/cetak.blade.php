@@ -471,9 +471,9 @@
     Demikian Berita Acara Hasil Pengawasan Pencemaran Sumber Daya Ikan dan Lingkungannya untuk diketahui dan dipergunakan sebagaimana mestinya.
 </p>
 
-<table class="ttd-table" style="margin-bottom: 40px;">
+<table class="ttd-table" style="margin-bottom: 40px; width: 100%;">
     <tr>
-        <td>
+        <td style="width: 50%; vertical-align: top;">
             Pelaku Usaha<br><br><br>
             @if($ttd = $ttdSrc($baPencemaran->ttd_pelaku_usaha))
                 <img src="{{ $ttd }}" style="height:60px; object-fit:contain;"><br>
@@ -482,15 +482,19 @@
             @endif
             ( <u><strong>{{ strtoupper($orDash($baPencemaran->nama_pj)) }}</strong></u> )
         </td>
-        <td>
+        <td style="width: 50%; vertical-align: top;">
             Pengawas Perikanan/Polsus PWP-3-K<br><br><br>
-            @if($ttd = $ttdSrc($baPencemaran->ttd_pengawas_1))
-                <img src="{{ $ttd }}" style="height:60px; object-fit:contain;"><br>
-            @else
-                <div style="height:60px;"></div>
-            @endif
-            ( <u><strong>{{ strtoupper($baPencemaran->pengawas->first()->nama ?? '..........................') }}</strong></u> )<br>
-            NIP. {{ $baPencemaran->pengawas->first()->nip ?? '..........................' }}
+            @foreach($baPencemaran->pengawas as $idx => $pg)
+                <div style="margin-bottom: 20px;">
+                    @if($pg->tanda_tangan && $ttdSrc($pg->tanda_tangan))
+                        <img src="{{ $ttdSrc($pg->tanda_tangan) }}" style="height:60px; object-fit:contain;"><br>
+                    @else
+                        <div style="height:40px;"></div>
+                    @endif
+                    ( <u><strong>{{ strtoupper($pg->nama ?: '..........................') }}</strong></u> )<br>
+                    NIP. {{ $pg->nip ?: '..........................' }}
+                </div>
+            @endforeach
         </td>
     </tr>
     <tr>
@@ -605,18 +609,22 @@
     <tr style="font-weight:bold;"><td colspan="2" style="text-align:center;">Kesimpulan Akhir</td><td style="text-align:center;">{!! cb($e6['kesimpulan'] ?? '', 'ya') !!}</td><td style="text-align:center;">{!! cb($e6['kesimpulan'] ?? '', 'tidak') !!}</td></tr>
 </table>
 
-<table class="ttd-table" style="margin-top: 50px;">
+<table class="ttd-table" style="margin-top: 50px; width: 100%;">
     <tr>
-        <td style="width:60%;"></td>
-        <td style="width:40%;">
+        <td style="width:50%;"></td>
+        <td style="width:50%; vertical-align: top;">
             Pengawas Perikanan/Polsus PWP-3-K<br><br><br>
-            @if($ttd = $ttdSrc($baPencemaran->ttd_pengawas_1))
-                <img src="{{ $ttd }}" style="height:60px; object-fit:contain;"><br>
-            @else
-                <div style="height:60px;"></div>
-            @endif
-            ( <u><strong>{{ strtoupper($baPencemaran->pengawas->first()->nama ?? '..........................') }}</strong></u> )<br>
-            NIP. {{ $baPencemaran->pengawas->first()->nip ?? '..........................' }}
+            @foreach($baPencemaran->pengawas as $idx => $pg)
+                <div style="margin-bottom: 20px;">
+                    @if($pg->tanda_tangan && $ttdSrc($pg->tanda_tangan))
+                        <img src="{{ $ttdSrc($pg->tanda_tangan) }}" style="height:60px; object-fit:contain;"><br>
+                    @else
+                        <div style="height:40px;"></div>
+                    @endif
+                    ( <u><strong>{{ strtoupper($pg->nama ?: '..........................') }}</strong></u> )<br>
+                    NIP. {{ $pg->nip ?: '..........................' }}
+                </div>
+            @endforeach
         </td>
     </tr>
 </table>

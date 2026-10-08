@@ -66,6 +66,7 @@ class BaPpkController extends Controller
 
         foreach ($request->input('pengawas', []) as $p) {
             if (!empty($p['nama'])) {
+                $p['tanda_tangan'] = $this->simpanTandaTangan($p['tanda_tangan'] ?? null);
                 $ba->pengawas()->create($p);
             }
         }
@@ -114,6 +115,7 @@ class BaPpkController extends Controller
         $baPpk->pengawas()->delete();
         foreach ($request->input('pengawas', []) as $p) {
             if (!empty($p['nama'])) {
+                $p['tanda_tangan'] = $this->simpanTandaTangan($p['tanda_tangan'] ?? null);
                 $baPpk->pengawas()->create($p);
             }
         }

@@ -116,4 +116,9 @@ class PelakuUsaha extends Model
             ->when($filters['jenis_usaha_id'] ?? null, fn ($q, $v) => $q->where('jenis_usaha_id', $v))
             ->when($filters['status'] ?? null, fn ($q, $v) => $q->where('status', $v));
     }
+
+    public function timelineTahapans()
+    {
+        return $this->hasMany(TimelineTahapan::class);
+    }
 }

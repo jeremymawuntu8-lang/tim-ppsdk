@@ -15,11 +15,11 @@ use Illuminate\Support\Collection;
 class TimelinePengawasanService
 {
     public const STAGES = [
-        'jadwal'   => ['label' => 'Jadwal',              'icon' => 'fa-calendar-check'],
-        'telaah'   => ['label' => 'Telaah Dokumen',      'icon' => 'fa-file-magnifying-glass'],
-        'lapangan' => ['label' => 'Pengawasan Lapangan', 'icon' => 'fa-person-hiking'],
-        'sp'       => ['label' => 'Surat Peringatan',    'icon' => 'fa-envelope-open-text'],
-        'selesai'  => ['label' => 'Selesai',             'icon' => 'fa-flag-checkered'],
+        'pemberitahuan' => ['label' => 'Pemberitahuan', 'icon' => 'fa-envelope'],
+        'pengawasan'    => ['label' => 'Pengawasan', 'icon' => 'fa-eye'],
+        'saran'         => ['label' => 'Saran / Tindak Lanjut', 'icon' => 'fa-file-signature'],
+        'keterangan'    => ['label' => 'Permintaan Keterangan', 'icon' => 'fa-file-contract'],
+        'supervisi'     => ['label' => 'Supervisi', 'icon' => 'fa-shield-halved'],
     ];
 
     /** relasi BA => [label, route show, warna] */
@@ -49,6 +49,7 @@ class TimelinePengawasanService
         $baCols = 'id,pelaku_usaha_id,nomor_ba,tanggal_pengawasan,status,created_at';
 
         $loads = [
+            'timelineTahapans',
             'jadwalPengawasans',
             'pengawasanTidakLangsungs',
             'suratPeringatans',
@@ -72,8 +73,9 @@ class TimelinePengawasanService
         $ptls = $pu->pengawasanTidakLangsungs ?? collect();
         $sps = $pu->suratPeringatans ?? collect();
         $jadwals = ($pu->jadwalPengawasans ?? collect())->where('status', '!=', 'dibatalkan');
+        $tahapans = $pu->timelineTahapans ?? collect();
 
-        $stages = $this->computeStages($bas, $ptls, $sps, $jadwals);
+        $stages = $this->computeStages($tahapans);
 
         // Tahap aktif = tahap pertama yang belum selesai/dilewati
         $current = 'selesai';
@@ -83,7 +85,7 @@ class TimelinePengawasanService
                 break;
             }
         }
-        $hasActivity = $bas->isNotEmpty() || $ptls->isNotEmpty() || $sps->isNotEmpty() || $jadwals->isNotEmpty();
+        $hasActivity = $tahapans->isNotEmpty() || $bas->isNotEmpty() || $ptls->isNotEmpty() || $sps->isNotEmpty() || $jadwals->isNotEmpty();
         if (!$hasActivity) {
             $current = 'belum';
         }
@@ -123,108 +125,42 @@ class TimelinePengawasanService
         return $all;
     }
 
-    protected function computeStages(Collection $bas, Collection $ptls, Collection $sps, Collection $jadwals): array
+    protected function computeStages(Collection $tahapans): array
     {
         $s = [];
+        $lastStateDone = true;
+
         foreach (self::STAGES as $key => $meta) {
-            $s[$key] = $meta + ['state' => 'pending', 'note' => null, 'date' => null];
-        }
+            $record = $tahapans->firstWhere('tahap', $key);
+            $s[$key] = $meta + ['state' => 'pending', 'note' => null, 'date' => null, 'record_id' => $record->id ?? null];
 
-        $baStatuses = $bas->pluck('status');
-        $ptlStatuses = $ptls->pluck('status');
-        $spIssued = $sps->filter(fn ($sp) => $this->spLevel($sp) !== null);
-
-        // ---------- 1. JADWAL ----------
-        $laterExists = $ptls->isNotEmpty() || $bas->isNotEmpty() || $sps->isNotEmpty();
-        if ($jadwals->where('status', 'selesai')->isNotEmpty()) {
-            $s['jadwal']['state'] = 'done';
-            $s['jadwal']['date'] = $jadwals->where('status', 'selesai')->max('tanggal_rencana');
-            $s['jadwal']['note'] = $jadwals->count() . ' jadwal';
-        } elseif ($jadwals->isNotEmpty() && !$laterExists) {
-            $next = $jadwals->sortBy('tanggal_rencana')->first();
-            $s['jadwal']['state'] = 'active';
-            $s['jadwal']['date'] = $next->tanggal_rencana;
-            $s['jadwal']['note'] = self::STATUS_LABELS[$next->status] ?? $next->status;
-        } elseif ($laterExists) {
-            $s['jadwal']['state'] = 'done';
-            $s['jadwal']['note'] = $jadwals->isNotEmpty() ? $jadwals->count() . ' jadwal' : 'Otomatis';
-            $s['jadwal']['date'] = $jadwals->max('tanggal_rencana');
-        }
-
-        // ---------- 2. TELAAH DOKUMEN ----------
-        if ($ptls->isNotEmpty()) {
-            if ($ptlStatuses->contains('proses')) {
-                $s['telaah']['state'] = 'active';
-                $s['telaah']['note'] = 'Sedang ditelaah';
-            } else {
-                $s['telaah']['state'] = 'done';
-                $s['telaah']['note'] = $ptls->count() . ' telaah';
-            }
-            $s['telaah']['date'] = $ptls->max(fn ($p) => $p->tanggal_telaah ?? $p->tanggal_laporan);
-        } elseif ($bas->isNotEmpty() || $sps->isNotEmpty()) {
-            $s['telaah']['state'] = 'skipped';
-            $s['telaah']['note'] = 'Tidak tercatat';
-        }
-
-        // ---------- 3. PENGAWASAN LAPANGAN ----------
-        $allPtlSelesai = $ptls->isNotEmpty() && $ptlStatuses->every(fn ($v) => $v === 'selesai');
-        if ($bas->isNotEmpty()) {
-            $berjalan = $baStatuses->filter(fn ($v) => in_array($v, ['draft', 'proses']))->count();
-            if ($berjalan > 0) {
-                $s['lapangan']['state'] = 'active';
-                $s['lapangan']['note'] = $berjalan . ' BA berjalan';
-            } else {
-                $s['lapangan']['state'] = 'done';
-                $s['lapangan']['note'] = $bas->count() . ' BA';
-            }
-            $s['lapangan']['date'] = $bas->max('tanggal');
-        } elseif ($spIssued->isNotEmpty() || $allPtlSelesai) {
-            $s['lapangan']['state'] = 'skipped';
-            $s['lapangan']['note'] = $allPtlSelesai ? 'Cukup telaah dokumen' : 'Tidak tercatat';
-        }
-
-        // ---------- 4. SURAT PERINGATAN ----------
-        $butuhTindakLanjut = $baStatuses->contains('tindak_lanjut') || $ptlStatuses->contains('tindak_lanjut');
-        $laporanBermasalah = $sps->contains(function ($sp) {
-            for ($i = 1; $i <= 5; $i++) {
-                if (($sp->{"laporan_{$i}_status"} ?? null) === 'Tidak Menyampaikan Laporan') {
-                    return true;
+            if ($record) {
+                if ($record->status === 'selesai') {
+                    $s[$key]['state'] = 'done';
+                    $s[$key]['date'] = $record->tanggal ?? $record->updated_at;
+                } elseif ($record->status === 'proses') {
+                    $s[$key]['state'] = 'active';
+                } elseif ($record->status === 'skip') {
+                    $s[$key]['state'] = 'skipped';
+                } else { // belum
+                    if ($lastStateDone) {
+                        $s[$key]['state'] = 'next';
+                    } else {
+                        $s[$key]['state'] = 'pending';
+                    }
                 }
-            }
-            return false;
-        });
-
-        if ($spIssued->isNotEmpty()) {
-            $levels = $spIssued->map(fn ($sp) => $this->spLevel($sp));
-            $s['sp']['state'] = 'done';
-            $s['sp']['note'] = $levels->contains('PENCABUTAN') ? 'Pencabutan' : $levels->sort()->last() . ' terbit';
-            $s['sp']['date'] = $spIssued->max('updated_at');
-        } elseif ($butuhTindakLanjut || $laporanBermasalah) {
-            $s['sp']['state'] = 'alert';
-            $s['sp']['note'] = $laporanBermasalah ? 'Laporan tidak disampaikan' : 'Perlu tindak lanjut';
-        } elseif (in_array($s['lapangan']['state'], ['done', 'skipped'])) {
-            $s['sp']['state'] = 'skipped';
-            $s['sp']['note'] = 'Tidak diperlukan';
-        }
-
-        // ---------- 5. SELESAI ----------
-        $hasMain = $bas->isNotEmpty() || $ptls->isNotEmpty();
-        $baSelesai = $baStatuses->every(fn ($v) => $v === 'selesai');
-        $ptlSelesai = $ptlStatuses->every(fn ($v) => $v === 'selesai');
-        if ($hasMain && $baSelesai && $ptlSelesai && $s['sp']['state'] !== 'alert') {
-            $s['selesai']['state'] = 'done';
-            $s['selesai']['note'] = 'Pengawasan tuntas';
-            $s['selesai']['date'] = collect([$bas->max('tanggal'), $s['telaah']['date']])->filter()->max();
-        }
-
-        // Tahap pertama yang masih "pending" setelah tahap selesai = sedang menunggu
-        foreach ($s as $key => $stage) {
-            if ($stage['state'] === 'pending') {
-                $s[$key]['state'] = 'next';
-                break;
-            }
-            if (in_array($stage['state'], ['active', 'alert'])) {
-                break;
+                $s[$key]['note'] = $record->catatan;
+                
+                if (in_array($record->status, ['proses', 'belum'])) {
+                    $lastStateDone = false;
+                }
+            } else {
+                if ($lastStateDone) {
+                    $s[$key]['state'] = 'next';
+                    $lastStateDone = false;
+                } else {
+                    $s[$key]['state'] = 'pending';
+                }
             }
         }
 

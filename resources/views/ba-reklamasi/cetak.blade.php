@@ -193,9 +193,9 @@
 
     <p class="penutup" style="margin-top: 15px;">Demikian Berita Acara Pengawasan Pelaksanaan Reklamasi ini dibuat dengan sebenar-benarnya.</p>
 
-    <table class="ttd-table" cellpadding="0" cellspacing="0" style="margin-top: 30px;">
+    <table class="ttd-table" cellpadding="0" cellspacing="0" style="margin-top: 30px; width: 100%;">
         <tr>
-            <td style="width:50%;">
+            <td style="width:50%; vertical-align: top;">
                 Pelaku Usaha
                 <br><br><br>
                 @if($baReklamasi->ttd_pelaku_usaha && $ttdSrc($baReklamasi->ttd_pelaku_usaha))
@@ -207,36 +207,22 @@
                 <span style="text-decoration:underline; font-weight:bold;">{{ $orDash($baReklamasi->penanggung_jawab_usaha) }}</span><br>
                 NIK. {{ $orDash($baReklamasi->nik_pj) }}
             </td>
-            <td style="width:50%;">
-                Polsus PWP3K
+            <td style="width:50%; vertical-align: top;">
+                Polsus PWP3K / Pengawas
                 <br><br><br>
-                @if($baReklamasi->ttd_pengawas_1 && $ttdSrc($baReklamasi->ttd_pengawas_1))
-                    <img src="{{ $ttdSrc($baReklamasi->ttd_pengawas_1) }}" style="max-height:70px; max-width:140px;">
-                @else
-                    <div style="height:70px;"></div>
-                @endif
-                <br>
-                <span style="text-decoration:underline; font-weight:bold;">
-                    {{ $baReklamasi->pengawas->first()->nama ?? '..........................' }}
-                </span><br>
-                NIP. {{ $baReklamasi->pengawas->first()->nip ?? '..........................' }}
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2" style="padding-top: 30px;">
-                Paraf Pengesahan<br>
-                Nama Polsus PWP3K
-                <br><br><br>
-                @if($baReklamasi->ttd_pengawas_2 && $ttdSrc($baReklamasi->ttd_pengawas_2))
-                    <img src="{{ $ttdSrc($baReklamasi->ttd_pengawas_2) }}" style="max-height:70px; max-width:140px;">
-                @else
-                    <div style="height:70px;"></div>
-                @endif
-                <br>
-                <span style="text-decoration:underline; font-weight:bold;">
-                    {{ $baReklamasi->pengawas->skip(1)->first()->nama ?? '..........................' }}
-                </span><br>
-                NIP. {{ $baReklamasi->pengawas->skip(1)->first()->nip ?? '..........................' }}
+                @foreach($baReklamasi->pengawas as $idx => $pg)
+                    <div style="margin-bottom: 20px;">
+                        @if($pg->tanda_tangan && $ttdSrc($pg->tanda_tangan))
+                            <img src="{{ $ttdSrc($pg->tanda_tangan) }}" style="max-height:70px; max-width:140px;"><br>
+                        @else
+                            <div style="height:40px;"></div>
+                        @endif
+                        <span style="text-decoration:underline; font-weight:bold;">
+                            {{ $pg->nama ?: '..........................' }}
+                        </span><br>
+                        NIP. {{ $pg->nip ?: '..........................' }}
+                    </div>
+                @endforeach
             </td>
         </tr>
     </table>

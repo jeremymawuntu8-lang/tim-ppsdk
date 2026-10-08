@@ -8,14 +8,23 @@
 
 @php
     $cards = [
-        'belum'    => ['label' => 'Belum Ada Pengawasan', 'icon' => 'fa-hourglass-start', 'color' => 'secondary'],
-        'jadwal'   => ['label' => 'Tahap Jadwal',         'icon' => $stages['jadwal']['icon'],   'color' => 'primary'],
-        'telaah'   => ['label' => 'Telaah Dokumen',       'icon' => $stages['telaah']['icon'],   'color' => 'purple'],
-        'lapangan' => ['label' => 'Pengawasan Lapangan',  'icon' => $stages['lapangan']['icon'], 'color' => 'info'],
-        'sp'       => ['label' => 'Surat Peringatan',     'icon' => $stages['sp']['icon'],       'color' => 'orange'],
-        'selesai'  => ['label' => 'Selesai',              'icon' => $stages['selesai']['icon'],  'color' => 'success'],
+        'belum'         => ['label' => 'Belum Ada Pengawasan',  'icon' => 'fa-hourglass-start',             'color' => 'secondary'],
+        'pemberitahuan' => ['label' => 'Pemberitahuan',         'icon' => $stages['pemberitahuan']['icon'], 'color' => 'primary'],
+        'pengawasan'    => ['label' => 'Pengawasan',            'icon' => $stages['pengawasan']['icon'],    'color' => 'info'],
+        'saran'         => ['label' => 'Saran / Tindak Lanjut', 'icon' => $stages['saran']['icon'],         'color' => 'warning'],
+        'keterangan'    => ['label' => 'Permintaan Keterangan', 'icon' => $stages['keterangan']['icon'],    'color' => 'danger'],
+        'supervisi'     => ['label' => 'Supervisi',             'icon' => $stages['supervisi']['icon'],     'color' => 'purple'],
+        'selesai'       => ['label' => 'Selesai',               'icon' => 'fa-flag-checkered',              'color' => 'success'],
     ];
-    $currentColor = ['belum' => 'secondary', 'jadwal' => 'primary', 'telaah' => 'purple', 'lapangan' => 'info', 'sp' => 'orange', 'selesai' => 'success'];
+    $currentColor = [
+        'belum' => 'secondary',
+        'pemberitahuan' => 'primary',
+        'pengawasan' => 'info',
+        'saran' => 'warning',
+        'keterangan' => 'danger',
+        'supervisi' => 'purple',
+        'selesai' => 'success'
+    ];
     $tahap = request('tahap');
 @endphp
 

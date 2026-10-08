@@ -186,14 +186,20 @@
                 <label class="form-label fw-semibold mb-2">Pelaku Usaha &mdash; <span class="text-primary sig-name-pj">{{ old('penanggung_jawab_usaha', $baReklamasi->penanggung_jawab_usaha ?? '') ?: 'belum diisi' }}</span></label>
                 @include('ba-was-prl.partials.ttd-widget', ['name' => 'ttd_pelaku_usaha', 'existing' => $baReklamasi->ttd_pelaku_usaha ?? null, 'value' => old('ttd_pelaku_usaha', $baReklamasi->ttd_pelaku_usaha ?? '')])
             </div>
-            <div class="col-md-6 col-12">
-                <label class="form-label fw-semibold mb-2">Polsus PWP3K / Pengawas</label>
-                @include('ba-was-prl.partials.ttd-widget', ['name' => 'ttd_pengawas_1', 'existing' => $baReklamasi->ttd_pengawas_1 ?? null, 'value' => old('ttd_pengawas_1', $baReklamasi->ttd_pengawas_1 ?? '')])
-            </div>
-            <div class="col-md-6 col-12">
-                <label class="form-label fw-semibold mb-2">Paraf Pengesahan (Opsional)</label>
-                @include('ba-was-prl.partials.ttd-widget', ['name' => 'ttd_pengawas_2', 'existing' => $baReklamasi->ttd_pengawas_2 ?? null, 'value' => old('ttd_pengawas_2', $baReklamasi->ttd_pengawas_2 ?? '')])
-            </div>
+        </div>
+        <div class="row g-3 mb-4" id="ttdPengawasWrapper">
+            <div class="col-12"><label class="form-label fw-semibold mb-0"><i class="fas fa-users me-1"></i> Tim Pengawas</label></div>
+            @forelse($pengawasData as $i => $pg)
+                <div class="col-md-6 col-12 ttd-pengawas-block" data-pengawas-id="{{ $i }}">
+                    <label class="form-label fw-semibold mb-2 sig-name-label">{{ $pg['nama'] ?: 'Anggota Pengawas' }}</label>
+                    @include('ba-was-prl.partials.ttd-widget', ['name' => 'pengawas['.$i.'][tanda_tangan]', 'existing' => $pg['tanda_tangan'] ?? null, 'value' => ''])
+                </div>
+            @empty
+                <div class="col-md-6 col-12 ttd-pengawas-block" data-pengawas-id="0">
+                    <label class="form-label fw-semibold mb-2 sig-name-label">Anggota Pengawas</label>
+                    @include('ba-was-prl.partials.ttd-widget', ['name' => 'pengawas[0][tanda_tangan]', 'existing' => null, 'value' => ''])
+                </div>
+            @endforelse
         </div>
 
         <div class="form-section-title mt-4"><i class="fas fa-check-circle me-1"></i> Status &amp; Berkas</div>
@@ -368,13 +374,51 @@
         </div>`;
     }
 
+    function buildTtdWidgetHtml(name) {
+        return `<div class="signature-pad-wrap" data-existing="">
+            <div class="btn-group btn-group-sm ttd-mode-tabs mb-2" role="group">
+                <button type="button" class="btn btn-outline-primary active ttd-mode-btn" data-mode="draw"><i class="fas fa-pen me-1"></i>Gambar</button>
+                <button type="button" class="btn btn-outline-primary ttd-mode-btn" data-mode="upload"><i class="fas fa-camera me-1"></i>Upload Foto</button>
+            </div>
+            <div class="ttd-mode-draw">
+                <canvas class="ttd-canvas"></canvas>
+                <button type="button" class="btn btn-sm btn-outline-secondary btn-clear-ttd mt-2"><i class="fas fa-eraser me-1"></i>Kosongkan</button>
+            </div>
+            <div class="ttd-mode-upload" style="display:none;">
+                <input type="file" class="form-control form-control-sm ttd-file-input" accept="image/*">
+                <div class="form-text">Foto tanda tangan di kertas putih, hasil scan, atau stempel digital.</div>
+                <div class="ttd-upload-preview mt-2"></div>
+            </div>
+            <input type="hidden" name="${name}" class="ttd-hidden-input" value="">
+        </div>`;
+    }
+
+    function buildPengawasSigBlock(idx) {
+        return `<div class="col-md-6 col-12 ttd-pengawas-block" data-pengawas-id="${idx}">
+            <label class="form-label fw-semibold mb-2 sig-name-label">Anggota Pengawas</label>
+            ${buildTtdWidgetHtml('pengawas[' + idx + '][tanda_tangan]')}
+        </div>`;
+    }
+
     $('#btnTambahPengawas').on('click', function () {
-        $('#pengawasWrapper').append($(buildPengawasRow(pengawasIdx)));
+        let $row = $(buildPengawasRow(pengawasIdx));
+        $('#pengawasWrapper').append($row);
+        let $sig = $(buildPengawasSigBlock(pengawasIdx));
+        $('#ttdPengawasWrapper').append($sig);
+        initSignaturePad($sig.find('.signature-pad-wrap')[0]);
         pengawasIdx++;
     });
     $(document).on('click', '.btn-hapus-pengawas', function () {
-        if ($('.pengawas-row').length > 1) { $(this).closest('.pengawas-row').remove(); }
-        else { $(this).closest('.pengawas-row').find('input').val(''); }
+        if ($('.pengawas-row').length > 1) { 
+            let id = $(this).closest('.pengawas-row').data('pengawas-id');
+            $(this).closest('.pengawas-row').remove(); 
+            $(`#ttdPengawasWrapper .ttd-pengawas-block[data-pengawas-id="${id}"]`).remove();
+        }
+    });
+    $(document).on('input', '.pengawas-nama-input', function () {
+        let id = $(this).closest('.pengawas-row').data('pengawas-id');
+        let val = $(this).val().trim() || 'Anggota Pengawas';
+        $(`#ttdPengawasWrapper .ttd-pengawas-block[data-pengawas-id="${id}"] .sig-name-label`).text(val);
     });
 </script>
 @endpush
