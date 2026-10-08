@@ -181,11 +181,9 @@
                                                 <i class="fab fa-google-drive me-1"></i> Buka Drive
                                             </a>
                                         @else
-                                            @if(in_array($item->ekstensi, ['pdf', 'jpg', 'jpeg', 'png']))
-                                                <a href="{{ route('arsip-dokumen-ba.download', ['arsipDokumenBa' => $item->id, 'preview' => 1]) }}" target="_blank" class="btn btn-outline-primary" title="Buka / Preview di Tab Baru">
-                                                    <i class="fas fa-eye me-1"></i> Buka
-                                                </a>
-                                            @endif
+                                            <a href="{{ route('arsip-dokumen-ba.download', ['arsipDokumenBa' => $item->id, 'preview' => 1]) }}" target="_blank" class="btn btn-outline-primary" title="Buka / Preview di Tab Baru">
+                                                <i class="fas fa-eye me-1"></i> Lihat
+                                            </a>
                                             <a href="{{ route('arsip-dokumen-ba.download', $item->id) }}" class="btn btn-primary" title="Unduh File">
                                                 <i class="fas fa-download me-1"></i> Unduh
                                             </a>
