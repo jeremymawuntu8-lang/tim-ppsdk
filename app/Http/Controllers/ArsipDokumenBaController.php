@@ -139,8 +139,11 @@ class ArsipDokumenBaController extends Controller
         $modelClass = null;
         $baId = null;
 
-        if (!empty($data['arsipable_type']) && !empty($data['arsipable_id'])) {
+        if (!empty($data['arsipable_type'])) {
             $modelClass = self::BA_MODELS[$data['arsipable_type']];
+        }
+
+        if (!empty($data['arsipable_id']) && $modelClass) {
             $ba = $modelClass::findOrFail($data['arsipable_id']);
             $baId = $ba->id;
         }
