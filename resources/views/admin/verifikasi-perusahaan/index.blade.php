@@ -78,7 +78,11 @@
                                                 </div>
                                             @endif
                                             <div>
-                                                <strong class="text-dark">{{ $company->nama_perusahaan }}</strong><br>
+                                                <strong class="text-dark">{{ $company->nama_perusahaan }}</strong>
+                                                @if($company->documents()->where('is_read', false)->exists())
+                                                    <span class="badge bg-danger ms-1" style="font-size: 0.65rem;" title="Ada dokumen lanjutan baru!"><i class="fas fa-bell"></i> Baru</span>
+                                                @endif
+                                                <br>
                                                 <span class="small text-muted">{{ $company->nama_penanggung_jawab }}</span>
                                             </div>
                                         </div>

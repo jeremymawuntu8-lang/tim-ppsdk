@@ -11,7 +11,8 @@ class CompanyDocument extends Model
         'judul',
         'keterangan',
         'nama_file',
-        'path_file'
+        'path_file',
+        'is_read'
     ];
 
     public function company()

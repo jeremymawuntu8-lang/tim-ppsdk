@@ -145,4 +145,17 @@ class VerifikasiPerusahaanController extends Controller
         return redirect()->route('admin.verifikasi-perusahaan.index')
             ->with('success', "Perusahaan \"{$company->nama_perusahaan}\" telah ditolak.");
     }
+
+    /**
+     * Tandai semua dokumen tambahan perusahaan sebagai sudah dibaca.
+     */
+    public function markDocumentsRead(Company $company)
+    {
+        $company->documents()->where('is_read', false)->update(['is_read' => true]);
+        
+        // Catat di log aktivitas
+        ActivityLog::catat('read_document', 'VerifikasiPerusahaan', "Menghapus notifikasi dokumen baru untuk perusahaan: {$company->nama_perusahaan}");
+
+        return back()->with('success', 'Notifikasi dokumen baru dari perusahaan ini telah dihapus.');
+    }
 }

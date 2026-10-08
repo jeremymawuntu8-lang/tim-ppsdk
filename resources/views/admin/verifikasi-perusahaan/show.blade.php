@@ -178,8 +178,16 @@
 {{-- Dokumen Lanjutan / Tambahan --}}
 @if($company->documents->isNotEmpty())
     <div class="card shadow-sm border-0 mb-4 mt-2" style="border-radius: 16px;">
-        <div class="card-header bg-white border-bottom pt-4 pb-3">
+        <div class="card-header bg-white border-bottom pt-4 pb-3 d-flex justify-content-between align-items-center">
             <h5 class="card-title fw-bold m-0" style="color: #0A3D6B;"><i class="fas fa-folder-open me-2"></i> Dokumen Lanjutan (Tambahan)</h5>
+            @if($company->documents()->where('is_read', false)->exists())
+                <form action="{{ route('admin.verifikasi-perusahaan.mark-documents-read', $company->id) }}" method="POST">
+                    @csrf
+                    <button type="submit" class="btn btn-sm btn-primary rounded-pill">
+                        <i class="fas fa-check-double me-1"></i> Tandai Sudah Dilihat
+                    </button>
+                </form>
+            @endif
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -195,8 +203,13 @@
                     </thead>
                     <tbody>
                         @foreach($company->documents as $index => $doc)
-                            <tr>
-                                <td class="ps-4 text-muted">{{ $index + 1 }}</td>
+                            <tr class="{{ !$doc->is_read ? 'bg-primary-soft' : '' }}">
+                                <td class="ps-4 text-muted">
+                                    {{ $index + 1 }}
+                                    @if(!$doc->is_read)
+                                        <span class="badge bg-danger ms-1" style="font-size: 0.55rem;">Baru</span>
+                                    @endif
+                                </td>
                                 <td class="fw-bold text-dark">{{ $doc->judul }}</td>
                                 <td>{{ $doc->keterangan ?: '-' }}</td>
                                 <td class="text-muted small">{{ $doc->created_at->format('d/m/Y H:i') }} WIB</td>

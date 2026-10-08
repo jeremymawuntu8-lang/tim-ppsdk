@@ -198,6 +198,7 @@ Route::middleware(['auth', 'active', 'internal'])->group(function () {
             Route::post('/{company}/approve', [VerifikasiPerusahaanController::class, 'approve'])->name('approve');
             Route::post('/{company}/revision', [VerifikasiPerusahaanController::class, 'revision'])->name('revision');
             Route::post('/{company}/reject', [VerifikasiPerusahaanController::class, 'reject'])->name('reject');
+            Route::post('/{company}/mark-documents-read', [VerifikasiPerusahaanController::class, 'markDocumentsRead'])->name('mark-documents-read');
         });
     });
 
