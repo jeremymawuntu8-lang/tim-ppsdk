@@ -133,6 +133,27 @@
                         @endif
                     </div>
                 @endif
+                {{-- 3. Dokumen Lanjutan (Jika Ada) --}}
+                @if($company->documents->isNotEmpty())
+                    @foreach($company->documents as $doc)
+                        <div class="timeline-item mt-4">
+                            <div class="timeline-marker bg-info"><i class="fas fa-file-upload"></i></div>
+                            <h6 class="fw-bold mb-1">Upload Dokumen Lanjutan</h6>
+                            <p class="text-muted small mb-2">{{ $doc->created_at->format('d M Y, H:i') }} WIB</p>
+                            <div class="card border-0 bg-light p-3" style="border-radius: 10px;">
+                                <div class="fw-bold text-dark">{{ $doc->judul }}</div>
+                                @if($doc->keterangan)
+                                    <div class="small text-muted mt-1">{{ $doc->keterangan }}</div>
+                                @endif
+                                <div class="mt-2">
+                                    <a href="{{ route('company.document.download', $doc->id) }}" class="btn btn-sm btn-outline-info rounded-pill" target="_blank">
+                                        <i class="fas fa-download me-1"></i> Unduh File
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                @endif
 
             </div>
         </div>
