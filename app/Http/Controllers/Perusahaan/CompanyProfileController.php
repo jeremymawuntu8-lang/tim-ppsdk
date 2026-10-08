@@ -37,6 +37,9 @@ class CompanyProfileController extends Controller
         $data = $request->validate([
             'nama_perusahaan'          => ['required', 'string', 'max:255'],
             'tanggal'                  => ['required', 'date'],
+            'nib'                      => ['required', 'string', 'max:50'],
+            'npwp'                     => ['nullable', 'string', 'max:50'],
+            'alamat'                   => ['required', 'string'],
             'nama_penanggung_jawab'    => ['required', 'string', 'max:255'],
             'jabatan_penanggung_jawab' => ['required', 'string', 'max:255'],
             'nomor_telepon'            => ['required', 'string', 'max:30'],
@@ -106,6 +109,9 @@ class CompanyProfileController extends Controller
         $data = $request->validate([
             'nama_perusahaan'          => ['required', 'string', 'max:255'],
             'tanggal'                  => ['required', 'date'],
+            'nib'                      => ['required', 'string', 'max:50'],
+            'npwp'                     => ['nullable', 'string', 'max:50'],
+            'alamat'                   => ['required', 'string'],
             'nama_penanggung_jawab'    => ['required', 'string', 'max:255'],
             'jabatan_penanggung_jawab' => ['required', 'string', 'max:255'],
             'nomor_telepon'            => ['required', 'string', 'max:30'],

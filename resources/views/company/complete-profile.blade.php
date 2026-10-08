@@ -153,6 +153,30 @@
                                     @error('nama_perusahaan')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
 
+                                {{-- NIB --}}
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Nomor Induk Berusaha (NIB) <span class="required-star">*</span></label>
+                                    <input type="text" name="nib" class="form-control @error('nib') is-invalid @enderror"
+                                           value="{{ old('nib') }}" required placeholder="Contoh: 1234567890123">
+                                    @error('nib')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+
+                                {{-- NPWP --}}
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">NPWP <span class="text-muted fw-normal">(Opsional)</span></label>
+                                    <input type="text" name="npwp" class="form-control @error('npwp') is-invalid @enderror"
+                                           value="{{ old('npwp') }}" placeholder="Contoh: 12.345.678.9-012.000">
+                                    @error('npwp')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+
+                                {{-- Alamat --}}
+                                <div class="col-md-12">
+                                    <label class="form-label fw-semibold">Alamat Lengkap Perusahaan <span class="required-star">*</span></label>
+                                    <textarea name="alamat" class="form-control @error('alamat') is-invalid @enderror"
+                                              rows="2" required placeholder="Masukkan alamat lengkap perusahaan beserta titik acuan jika ada.">{{ old('alamat') }}</textarea>
+                                    @error('alamat')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+
                                 {{-- 3. Tanggal --}}
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Tanggal <span class="required-star">*</span></label>
