@@ -71,6 +71,13 @@
         </div>
 
         <div class="card-body p-4">
+            @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" style="border-radius: 10px;">
+                    <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
             @if($errors->any())
                 <div class="alert alert-danger bg-danger-soft border-0 mb-4" style="border-radius: 10px;">
                     <div class="d-flex align-items-center mb-2">
@@ -141,8 +148,11 @@
                     <div class="col-md-12">
                         <label class="form-label fw-semibold">Dokumen/Perizinan yang Diunggah <span class="required-star">*</span></label>
                         <textarea name="dokumen_diunggah" class="form-control @error('dokumen_diunggah') is-invalid @enderror"
-                                  rows="10" required placeholder="Tuliskan seluruh dokumen yang Anda lampirkan dalam file PDF.">{{ old('dokumen_diunggah', $company->dokumen_diunggah) }}</textarea>
+                                  rows="10" required placeholder="Tuliskan seluruh dokumen yang Anda lampirkan dalam file PDF." {{ $company->isActive() ? 'readonly' : '' }}>{{ old('dokumen_diunggah', $company->dokumen_diunggah) }}</textarea>
                         @error('dokumen_diunggah')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        @if($company->isActive())
+                            <div class="form-text small"><i class="fas fa-info-circle me-1"></i> Data dokumen ini tidak dapat diubah karena perusahaan Anda sudah berstatus Aktif. Gunakan menu <strong>Upload Dokumen</strong> di sidebar jika ingin menambahkan dokumen baru.</div>
+                        @endif
                     </div>
 
                     {{-- 7. Keterangan Tambahan --}}
@@ -155,41 +165,45 @@
                 </div>
 
                 <hr class="my-5 border-light">
-                <h5 class="fw-bold mb-4" style="color: #0A3D6B;"><i class="fas fa-cloud-upload-alt me-2"></i> Update Dokumen PDF</h5>
                 
-                @if($company->file_dokumen)
-                <div class="alert alert-success border-0 bg-success-soft d-flex align-items-center mb-4" style="border-radius: 10px;">
-                    <i class="fas fa-file-pdf fs-3 text-success me-3"></i>
-                    <div>
-                        <strong class="d-block text-success">File saat ini sudah terunggah</strong>
-                        <span class="small text-success opacity-75">Anda tidak perlu mengupload ulang file jika tidak ada perubahan dokumen.</span>
-                    </div>
-                </div>
-                @endif
-
-                <div class="mb-4">
-                    <div class="upload-dropzone" id="dropzone">
-                        <i class="fas fa-file-pdf"></i>
-                        <h5 class="fw-bold text-dark mb-2">Tarik & Letakkan File PDF Baru di Sini (Opsional)</h5>
-                        <p class="text-muted small mb-3">klik untuk memilih file dari perangkat Anda (Maks. 1 GB)</p>
-                        
-                        <input type="file" name="file_dokumen" id="file_dokumen" class="d-none" accept=".pdf">
-                        <button type="button" class="btn btn-outline-primary rounded-pill px-4" onclick="document.getElementById('file_dokumen').click()">
-                            Pilih File PDF Baru
-                        </button>
-                        
-                        <div id="fileNameDisplay" class="mt-3 fw-semibold text-primary d-none">
-                            <i class="fas fa-check-circle me-1 text-success"></i> <span id="fileNameText"></span>
+                @if(!$company->isActive())
+                    <h5 class="fw-bold mb-4" style="color: #0A3D6B;"><i class="fas fa-cloud-upload-alt me-2"></i> Update Dokumen PDF</h5>
+                    
+                    @if($company->file_dokumen)
+                    <div class="alert alert-success border-0 bg-success-soft d-flex align-items-center mb-4" style="border-radius: 10px;">
+                        <i class="fas fa-file-pdf fs-3 text-success me-3"></i>
+                        <div>
+                            <strong class="d-block text-success">File saat ini sudah terunggah</strong>
+                            <span class="small text-success opacity-75">Anda tidak perlu mengupload ulang file jika tidak ada perubahan dokumen.</span>
                         </div>
                     </div>
-                    @error('file_dokumen')
-                        <div class="text-danger small mt-2 fw-semibold"><i class="fas fa-exclamation-triangle me-1"></i> {{ $message }}</div>
-                    @enderror
-                </div>
+                    @endif
+
+                    <div class="mb-4">
+                        <div class="upload-dropzone" id="dropzone">
+                            <i class="fas fa-file-pdf"></i>
+                            <h5 class="fw-bold text-dark mb-2">Tarik & Letakkan File PDF Baru di Sini (Opsional)</h5>
+                            <p class="text-muted small mb-3">klik untuk memilih file dari perangkat Anda (Maks. 1 GB)</p>
+                            
+                            <input type="file" name="file_dokumen" id="file_dokumen" class="d-none" accept=".pdf">
+                            <button type="button" class="btn btn-outline-primary rounded-pill px-4" onclick="document.getElementById('file_dokumen').click()">
+                                Pilih File PDF Baru
+                            </button>
+                            
+                            <div id="fileNameDisplay" class="mt-3 fw-semibold text-primary d-none">
+                                <i class="fas fa-check-circle me-1 text-success"></i> <span id="fileNameText"></span>
+                            </div>
+                        </div>
+                        @error('file_dokumen')
+                            <div class="text-danger small mt-2 fw-semibold"><i class="fas fa-exclamation-triangle me-1"></i> {{ $message }}</div>
+                        @enderror
+                    </div>
+                @endif
 
                 <div class="d-grid mt-5">
                     <button type="submit" class="btn btn-primary-custom text-white shadow" id="submitBtn">
-                        <i class="fas fa-paper-plane me-2"></i> Simpan & Kirim Ulang Pengajuan
+                        <i class="fas {{ $company->isActive() ? 'fa-save' : 'fa-paper-plane' }} me-2"></i> 
+                        {{ $company->isActive() ? 'Simpan Perubahan Profil' : 'Simpan & Kirim Ulang Pengajuan' }}
                     </button>
                 </div>
             </form>

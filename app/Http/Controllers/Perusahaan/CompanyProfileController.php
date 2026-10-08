@@ -122,14 +122,23 @@ class CompanyProfileController extends Controller
             $data['file_dokumen'] = $request->file('file_dokumen')->store('dokumen-perizinan', 'public');
         }
 
-        // Kembalikan status ke pending agar admin bisa verifikasi ulang
-        $data['status'] = 'pending';
-        $data['catatan_admin'] = null; // Hapus catatan revisi sebelumnya
-        $data['verified_by'] = null;
-        $data['verified_at'] = null;
+        // Jika statusnya BUKAN active (misal pending, revision, rejected),
+        // atau jika ada upload dokumen baru, set status jadi pending lagi
+        if (!$company->isActive() || $request->hasFile('file_dokumen')) {
+            $data['status'] = 'pending';
+            $data['catatan_admin'] = null; // Hapus catatan revisi sebelumnya
+            $data['verified_by'] = null;
+            $data['verified_at'] = null;
+        }
 
         $company->update($data);
 
-        return redirect()->route('company.upload.success')->with('company_id', $company->id);
+        // Jika dia diset ke pending (karena belum aktif atau kirim file baru), arahkan ke halaman sukses/review
+        if (!$company->isActive() || $request->hasFile('file_dokumen')) {
+            return redirect()->route('company.upload.success')->with('company_id', $company->id);
+        }
+
+        // Jika dia sudah aktif dan cuma update profil (tanpa kirim dokumen baru), kembalikan ke form
+        return redirect()->back()->with('success', 'Profil perusahaan berhasil diperbarui tanpa mengubah status Aktif Anda.');
     }
 }
