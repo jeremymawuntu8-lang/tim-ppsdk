@@ -14,6 +14,7 @@ use App\Policies\BaWasPrlPolicy;
 use App\Policies\PelakuUsahaPolicy;
 use App\Policies\UserPolicy;
 use App\Observers\BaMasterDataSyncObserver;
+use App\Observers\BaTimelineSyncObserver;
 use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -40,6 +41,12 @@ class AppServiceProvider extends ServiceProvider
         BaReklamasi::observe(BaMasterDataSyncObserver::class);
         BaPpk::observe(BaMasterDataSyncObserver::class);
         BaPencemaran::observe(BaMasterDataSyncObserver::class);
+
+        BaWasPrl::observe(BaTimelineSyncObserver::class);
+        BaWasAlse::observe(BaTimelineSyncObserver::class);
+        BaReklamasi::observe(BaTimelineSyncObserver::class);
+        BaPpk::observe(BaTimelineSyncObserver::class);
+        BaPencemaran::observe(BaTimelineSyncObserver::class);
 
         // Secara default, middleware 'guest' (dipakai di /login & /auth/google) akan
         // melempar user yang TERNYATA sudah login ke route pertama yang bernama

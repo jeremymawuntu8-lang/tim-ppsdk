@@ -18,8 +18,10 @@ class TimelinePengawasanService
         'pemberitahuan' => ['label' => 'Pemberitahuan', 'icon' => 'fa-envelope'],
         'pengawasan'    => ['label' => 'Pengawasan', 'icon' => 'fa-eye'],
         'saran'         => ['label' => 'Saran / Tindak Lanjut', 'icon' => 'fa-file-signature'],
-        'keterangan'    => ['label' => 'Permintaan Keterangan', 'icon' => 'fa-file-contract'],
+        'keterangan'    => ['label' => 'Pemeriksaan Keterangan', 'icon' => 'fa-file-contract'],
         'supervisi'     => ['label' => 'Supervisi', 'icon' => 'fa-shield-halved'],
+        'ekspose'       => ['label' => 'Ekspose', 'icon' => 'fa-desktop'],
+        'billing'       => ['label' => 'Billing', 'icon' => 'fa-receipt'],
     ];
 
     /** relasi BA => [label, route show, warna] */
@@ -95,7 +97,11 @@ class TimelinePengawasanService
         return [
             'stages' => $stages,
             'current' => $current,
-            'current_label' => $current === 'belum' ? 'Belum Ada Pengawasan' : self::STAGES[$current]['label'],
+            'current_label' => match ($current) {
+                'belum' => 'Belum Ada Pengawasan',
+                'selesai' => 'Selesai',
+                default => self::STAGES[$current]['label'] ?? ucfirst($current),
+            },
             'progress' => (int) round($doneCount / count(self::STAGES) * 100),
             'perlu_tindakan' => collect($stages)->contains(fn ($s) => $s['state'] === 'alert'),
             'last_activity' => $this->lastActivity($bas, $ptls, $sps, $jadwals),
@@ -128,9 +134,21 @@ class TimelinePengawasanService
     protected function computeStages(Collection $tahapans): array
     {
         $s = [];
+        $stageKeys = array_keys(self::STAGES);
+
+        // Cari tahap terjauh yang sudah tercatat proses / selesai / skip
+        $maxRecordedIndex = -1;
+        foreach ($stageKeys as $idx => $key) {
+            $rec = $tahapans->firstWhere('tahap', $key);
+            if ($rec && in_array($rec->status, ['proses', 'selesai', 'skip'])) {
+                $maxRecordedIndex = max($maxRecordedIndex, $idx);
+            }
+        }
+
         $lastStateDone = true;
 
         foreach (self::STAGES as $key => $meta) {
+            $currentIndex = array_search($key, $stageKeys, true);
             $record = $tahapans->firstWhere('tahap', $key);
             $s[$key] = $meta + ['state' => 'pending', 'note' => null, 'date' => null, 'record_id' => $record->id ?? null];
 
@@ -138,25 +156,30 @@ class TimelinePengawasanService
                 if ($record->status === 'selesai') {
                     $s[$key]['state'] = 'done';
                     $s[$key]['date'] = $record->tanggal ?? $record->updated_at;
-                } elseif ($record->status === 'proses') {
-                    $s[$key]['state'] = 'active';
                 } elseif ($record->status === 'skip') {
                     $s[$key]['state'] = 'skipped';
+                    $s[$key]['note'] = $record->catatan ?: 'Dilewati secara manual';
+                    $s[$key]['date'] = $record->tanggal ?? $record->updated_at;
+                } elseif ($record->status === 'proses') {
+                    $s[$key]['state'] = 'active';
+                    $lastStateDone = false;
                 } else { // belum
                     if ($lastStateDone) {
-                        $s[$key]['state'] = 'next';
+                        $s[$key]['state'] = 'active';
                     } else {
                         $s[$key]['state'] = 'pending';
                     }
-                }
-                $s[$key]['note'] = $record->catatan;
-                
-                if (in_array($record->status, ['proses', 'belum'])) {
                     $lastStateDone = false;
                 }
+                if (!$s[$key]['note']) {
+                    $s[$key]['note'] = $record->catatan;
+                }
             } else {
-                if ($lastStateDone) {
-                    $s[$key]['state'] = 'next';
+                // Jika belum ada record:
+                if ($maxRecordedIndex > $currentIndex) {
+                    $s[$key]['state'] = 'done';
+                } elseif ($lastStateDone) {
+                    $s[$key]['state'] = 'active';
                     $lastStateDone = false;
                 } else {
                     $s[$key]['state'] = 'pending';

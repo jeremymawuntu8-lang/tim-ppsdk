@@ -19,6 +19,14 @@ class TimelinePengawasanController extends Controller
     {
         $pelakuUsahas = PelakuUsaha::query()
             ->with(array_merge(['kabupaten:id,nama', 'jenisUsaha:id,nama'], TimelinePengawasanService::eagerLoads()))
+            // Default: hanya pelaku usaha yang tercatat di menu Pengawasan (punya BA)
+            // atau yang tahapan timeline-nya sudah dimulai. ?semua=1 untuk menampilkan semua.
+            ->when(!$request->boolean('semua'), fn ($q) => $q->where(function ($q2) {
+                foreach (array_keys(TimelinePengawasanService::BA_TYPES) as $rel) {
+                    $q2->orWhereHas($rel);
+                }
+                $q2->orWhereHas('timelineTahapans');
+            }))
             ->when($request->q, fn ($q, $v) => $q->where(function ($q2) use ($v) {
                 $q2->where('nama_perusahaan', 'like', "%{$v}%")->orWhere('nomor_pkkprl', 'like', "%{$v}%");
             }))
@@ -32,13 +40,18 @@ class TimelinePengawasanController extends Controller
         });
 
         // Ringkasan per tahap (sebelum filter tahap)
-        $summary = ['belum' => 0, 'perlu_tindakan' => 0];
+        $summary = [
+            'belum' => 0,
+            'selesai' => 0,
+            'perlu_tindakan' => 0,
+        ];
         foreach (array_keys(TimelinePengawasanService::STAGES) as $k) {
             $summary[$k] = 0;
         }
         foreach ($rows as $r) {
-            $summary[$r->timeline['current']]++;
-            if ($r->timeline['perlu_tindakan']) {
+            $curr = $r->timeline['current'] ?? 'belum';
+            $summary[$curr] = ($summary[$curr] ?? 0) + 1;
+            if (!empty($r->timeline['perlu_tindakan'])) {
                 $summary['perlu_tindakan']++;
             }
         }
@@ -80,12 +93,14 @@ class TimelinePengawasanController extends Controller
     public function show(PelakuUsaha $pelakuUsaha)
     {
         $pelakuUsaha->load(array_merge(
-            ['jenisUsaha', 'provinsi', 'kabupaten'],
+            ['jenisUsaha', 'provinsi', 'kabupaten', 'kecamatan', 'kelurahan', 'dokumenPelakuUsahas', 'dokumens', 'timelineTahapans.files'],
             TimelinePengawasanService::eagerLoads(true)
         ));
 
+        $company = \App\Models\Company::where('nama_perusahaan', $pelakuUsaha->nama_perusahaan)->first();
+
         $timeline = $this->service->build($pelakuUsaha);
 
-        return view('timeline-pengawasan.show', compact('pelakuUsaha', 'timeline'));
+        return view('timeline-pengawasan.show', compact('pelakuUsaha', 'timeline', 'company'));
     }
 }

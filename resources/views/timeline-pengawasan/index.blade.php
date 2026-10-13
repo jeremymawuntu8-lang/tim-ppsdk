@@ -12,8 +12,10 @@
         'pemberitahuan' => ['label' => 'Pemberitahuan',         'icon' => $stages['pemberitahuan']['icon'], 'color' => 'primary'],
         'pengawasan'    => ['label' => 'Pengawasan',            'icon' => $stages['pengawasan']['icon'],    'color' => 'info'],
         'saran'         => ['label' => 'Saran / Tindak Lanjut', 'icon' => $stages['saran']['icon'],         'color' => 'warning'],
-        'keterangan'    => ['label' => 'Permintaan Keterangan', 'icon' => $stages['keterangan']['icon'],    'color' => 'danger'],
+        'keterangan'    => ['label' => 'Pemeriksaan Keterangan', 'icon' => $stages['keterangan']['icon'],   'color' => 'danger'],
         'supervisi'     => ['label' => 'Supervisi',             'icon' => $stages['supervisi']['icon'],     'color' => 'purple'],
+        'ekspose'       => ['label' => 'Ekspose',               'icon' => $stages['ekspose']['icon'] ?? 'fa-desktop', 'color' => 'teal'],
+        'billing'       => ['label' => 'Billing',               'icon' => $stages['billing']['icon'] ?? 'fa-receipt', 'color' => 'indigo'],
         'selesai'       => ['label' => 'Selesai',               'icon' => 'fa-flag-checkered',              'color' => 'success'],
     ];
     $currentColor = [
@@ -23,6 +25,8 @@
         'saran' => 'warning',
         'keterangan' => 'danger',
         'supervisi' => 'purple',
+        'ekspose' => 'teal',
+        'billing' => 'indigo',
         'selesai' => 'success'
     ];
     $tahap = request('tahap');
@@ -35,8 +39,17 @@
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
                 <h5 class="card-title fw-bold mb-0 text-dark"><i class="fas fa-timeline me-2 text-primary"></i>Progres Pengawasan Seluruh Pelaku Usaha</h5>
-                <small class="text-muted">{{ number_format($total) }} pelaku usaha · klik kartu untuk memfilter berdasarkan tahap saat ini</small>
+                <small class="text-muted">
+                    {{ number_format($total) }} pelaku usaha
+                    {{ request()->boolean('semua') ? '(semua pelaku usaha)' : 'yang tercatat di menu Pengawasan' }}
+                    · klik kartu untuk memfilter berdasarkan tahap saat ini
+                </small>
             </div>
+            <a href="{{ request()->fullUrlWithQuery(['semua' => request()->boolean('semua') ? null : 1, 'page' => null]) }}"
+               id="btn-toggle-semua" class="btn btn-sm btn-outline-secondary fw-semibold">
+                <i class="fas {{ request()->boolean('semua') ? 'fa-filter' : 'fa-list' }} me-1"></i>
+                {{ request()->boolean('semua') ? 'Hanya yang ada di Pengawasan' : 'Tampilkan Semua Pelaku Usaha' }}
+            </a>
             @if($summary['perlu_tindakan'] > 0)
                 <a href="{{ request()->fullUrlWithQuery(['tahap' => 'perlu_tindakan', 'page' => null]) }}"
                    class="btn btn-sm {{ $tahap === 'perlu_tindakan' ? 'btn-danger' : 'btn-outline-danger' }} fw-semibold">
@@ -65,6 +78,7 @@
         <div class="card-body border-bottom bg-light py-3">
             <form method="GET" action="{{ route('timeline-pengawasan.index') }}" class="row g-2 align-items-center">
                 @if($tahap)<input type="hidden" name="tahap" value="{{ $tahap }}">@endif
+                @if(request()->boolean('semua'))<input type="hidden" name="semua" value="1">@endif
                 <div class="col-md-4 col-12">
                     <div class="input-group input-group-sm">
                         <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>

@@ -161,6 +161,9 @@ Route::middleware(['auth', 'active', 'internal'])->group(function () {
 
         Route::post('timeline-tahapan/{pelakuUsaha}/upload', [\App\Http\Controllers\Pengawasan\TimelineTahapanController::class, 'upload'])->name('timeline-tahapan.upload');
         Route::post('timeline-tahapan/{pelakuUsaha}/status', [\App\Http\Controllers\Pengawasan\TimelineTahapanController::class, 'updateStatus'])->name('timeline-tahapan.status');
+        Route::post('timeline-tahapan/{pelakuUsaha}/skip', [\App\Http\Controllers\Pengawasan\TimelineTahapanController::class, 'skipTahap'])->name('timeline-tahapan.skip');
+        Route::post('timeline-tahapan/{pelakuUsaha}/selesaikan-supervisi', [\App\Http\Controllers\Pengawasan\TimelineTahapanController::class, 'selesaikanSupervisi'])->name('timeline-tahapan.selesaikan-supervisi');
+        Route::post('timeline-tahapan/{pelakuUsaha}/lanjut-billing', [\App\Http\Controllers\Pengawasan\TimelineTahapanController::class, 'lanjutBilling'])->name('timeline-tahapan.lanjut-billing');
         Route::delete('timeline-tahapan-file/{file}', [\App\Http\Controllers\Pengawasan\TimelineTahapanController::class, 'deleteFile'])->name('timeline-tahapan-file.destroy');
     });
 

@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Yajra\DataTables\Facades\DataTables;
 
+
 class BaPencemaranController extends Controller
 {
     use ResolvesPelakuUsaha, HandlesArsipDokumenBa;

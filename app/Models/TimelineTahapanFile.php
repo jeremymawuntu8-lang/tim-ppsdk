@@ -12,4 +12,18 @@ class TimelineTahapanFile extends Model
     {
         return $this->belongsTo(TimelineTahapan::class, 'timeline_tahapan_id');
     }
+
+    public function getFormattedSizeAttribute(): string
+    {
+        if (!$this->file_size) {
+            return '';
+        }
+        $bytes = $this->file_size;
+        if ($bytes >= 1048576) {
+            return number_format($bytes / 1048576, 2) . ' MB';
+        } elseif ($bytes >= 1024) {
+            return number_format($bytes / 1024, 1) . ' KB';
+        }
+        return $bytes . ' B';
+    }
 }

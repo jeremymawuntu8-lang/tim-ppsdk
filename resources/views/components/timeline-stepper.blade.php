@@ -1,4 +1,4 @@
-@props(['stages', 'size' => 'lg'])
+@props(['stages', 'size' => 'lg', 'clickable' => false, 'activeTab' => null])
 
 @php
     $stateText = [
@@ -13,19 +13,18 @@
 
 <div class="tl-stepper-wrap">
     <ol class="tl-stepper {{ $size === 'sm' ? 'tl-sm' : '' }}">
+        @php
+            $selectedTab = $activeTab ?? request('tab');
+        @endphp
         @foreach($stages as $key => $stage)
             @php
-                $icon = match ($stage['state']) {
-                    'done' => 'fa-check',
-                    'skipped' => 'fa-minus',
-                    'alert' => 'fa-exclamation',
-                    default => $stage['icon'],
-                };
+                $icon = $stage['icon'];
                 $tooltip = $stage['label'] . ' — ' . ($stateText[$stage['state']] ?? '') . ($stage['note'] ? ' (' . $stage['note'] . ')' : '');
+                $isActiveTab = $selectedTab ? ($selectedTab === $key) : ($stage['state'] === 'active');
             @endphp
-            <li class="tl-step is-{{ $stage['state'] }} {{ request('tab') == $key ? 'active-tab' : '' }}" title="{{ $tooltip }}" @if($size === 'sm') data-bs-toggle="tooltip" @endif>
-                @if(isset($clickable) && $clickable && $size !== 'sm')
-                <a href="?tab={{ $key }}&action={{ request('action') }}" class="text-decoration-none" style="color: inherit; display: block; height: 100%;">
+            <li class="tl-step is-{{ $stage['state'] }} {{ $isActiveTab ? 'active-tab' : '' }}" title="{{ $tooltip }}" @if($size === 'sm') data-bs-toggle="tooltip" @endif>
+                @if($clickable && $size !== 'sm')
+                <a href="?tab={{ $key }}" class="tl-step-link text-decoration-none">
                 @endif
                     <span class="tl-step-dot"><i class="fas {{ $icon }}"></i></span>
                     @if($size !== 'sm')
@@ -35,7 +34,7 @@
                             <div class="tl-step-date"><i class="far fa-calendar me-1"></i>{{ \Carbon\Carbon::parse($stage['date'])->translatedFormat('d M Y') }}</div>
                         @endif
                     @endif
-                @if(isset($clickable) && $clickable && $size !== 'sm')
+                @if($clickable && $size !== 'sm')
                 </a>
                 @endif
             </li>
