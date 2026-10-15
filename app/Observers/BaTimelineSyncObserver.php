@@ -13,16 +13,9 @@ use App\Models\TimelineTahapanFile;
 class BaTimelineSyncObserver
 {
     /**
-     * Handle the "created" event for BA Models.
-     * Otomatis sinkronkan pembuatan BA ke Timeline Pengawasan Pelaku Usaha.
-     */
-    public function created($model): void
-    {
-        $this->syncToTimeline($model);
-    }
-
-    /**
      * Handle the "saved" event for BA Models.
+     * Otomatis sinkronkan pembuatan/update BA ke Timeline Pengawasan (Tindak Lanjut).
+     * Event "saved" fires for both create and update — no need for separate "created".
      */
     public function saved($model): void
     {
