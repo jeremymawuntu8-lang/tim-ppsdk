@@ -50,7 +50,8 @@ class BaPencemaranController extends Controller
     public function store(BaPencemaranRequest $request)
     {
         $data = $request->validated();
-        $data['pelaku_usaha_id'] = $this->resolvePelakuUsahaId($data['pelaku_usaha_id'] ?? null, null, $data['alamat_kantor'] ?? null);
+        $puInput = !empty($data['pelaku_usaha_id']) ? $data['pelaku_usaha_id'] : (!empty($data['nama_usaha_kegiatan']) ? $data['nama_usaha_kegiatan'] : ($data['nama_pj'] ?? null));
+        $data['pelaku_usaha_id'] = $this->resolvePelakuUsahaId($puInput, null, $data['alamat_kantor'] ?? null);
         
         $this->sanitizeBooleans($data);
         unset($data['foto'], $data['pengawas']);
@@ -97,7 +98,8 @@ class BaPencemaranController extends Controller
     {
         $data = $request->validated();
         $oldPelakuUsahaId = $baPencemaran->pelaku_usaha_id;
-        $data['pelaku_usaha_id'] = $this->resolvePelakuUsahaId($data['pelaku_usaha_id'] ?? null, null, $data['alamat_kantor'] ?? null);
+        $puInput = !empty($data['pelaku_usaha_id']) ? $data['pelaku_usaha_id'] : (!empty($data['nama_usaha_kegiatan']) ? $data['nama_usaha_kegiatan'] : ($data['nama_pj'] ?? null));
+        $data['pelaku_usaha_id'] = $this->resolvePelakuUsahaId($puInput, null, $data['alamat_kantor'] ?? null);
         
         $this->sanitizeBooleans($data);
         unset($data['foto'], $data['pengawas']);

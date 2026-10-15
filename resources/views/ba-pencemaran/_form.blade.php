@@ -140,16 +140,16 @@
             <h6 class="section-title mb-3">B. Informasi Pelaku Usaha / Pelaku Kegiatan</h6>
             <div class="row g-3">
                 <div class="col-md-12">
-                    <label class="form-label">Pelaku Usaha (Pilih dari Master Data)</label>
+                    <label class="form-label fw-bold text-dark">Pelaku Usaha / Perusahaan <span class="text-danger">*</span></label>
                     <select class="form-select" id="pelaku_usaha_id" name="pelaku_usaha_id">
-                        <option value="">-- Ketik untuk mencari / input manual --</option>
+                        <option value="">-- Pilih dari Master Data atau Ketik Nama Perusahaan Baru --</option>
                         @foreach($pelakuUsahas as $pu)
                             <option value="{{ $pu->id }}" data-nib="{{ $pu->nib }}" data-pj="{{ $pu->nama_pj }}" {{ old('pelaku_usaha_id', $baPencemaran->pelaku_usaha_id ?? '') == $pu->id ? 'selected' : '' }}>
                                 {{ $pu->nama_perusahaan }}
                             </option>
                         @endforeach
                     </select>
-                    <div class="form-text">Jika tidak ada, nama yang diketik akan otomatis ditambahkan ke Master Data.</div>
+                    <div class="form-text text-primary"><i class="fas fa-info-circle me-1"></i><strong>Penting:</strong> Pilih atau ketik nama perusahaan agar Berita Acara ini otomatis terhubung dan tercatat pada Timeline Tindak Lanjut.</div>
                 </div>
                 
                 <div class="col-md-6">
