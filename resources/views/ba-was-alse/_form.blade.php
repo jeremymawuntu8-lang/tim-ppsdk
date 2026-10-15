@@ -390,8 +390,8 @@
             <div class="col-md-6 col-12">
                 <label class="form-label">Status BA <span class="text-danger">*</span></label>
                 <select name="status" class="form-select">
-                    @foreach(['draft'=>'Draft','proses'=>'Proses','selesai'=>'Selesai','tindak_lanjut'=>'Tindak Lanjut'] as $val => $label)
-                        <option value="{{ $val }}" @selected(old('status', $baWasAlse->status ?? 'draft') == $val)>{{ $label }}</option>
+                    @foreach(['selesai'=>'Selesai','tindak_lanjut'=>'Tindak Lanjut'] as $val => $label)
+                        <option value="{{ $val }}" @selected(old('status', $baWasAlse->status ?? 'selesai') == $val)>{{ $label }}</option>
                     @endforeach
                 </select>
             </div>

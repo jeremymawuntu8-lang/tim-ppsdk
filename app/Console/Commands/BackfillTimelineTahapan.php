@@ -49,61 +49,84 @@ class BackfillTimelineTahapan extends Command
 
                         $nomorBa = $ba->nomor_ba ?: ('BA-' . $ba->id);
                         $tanggal = $ba->tanggal_pengawasan ?? $ba->created_at;
+                        $statusBa = $ba->status ?? 'selesai';
 
                         if ($dryRun) {
-                            $this->line("  [DRY] Pelaku Usaha #{$ba->pelaku_usaha_id} ({$ba->pelakuUsaha->nama_perusahaan}) ← {$label} {$nomorBa}");
+                            $this->line("  [DRY] Pelaku Usaha #{$ba->pelaku_usaha_id} ({$ba->pelakuUsaha->nama_perusahaan}) ← {$label} {$nomorBa} (status: {$statusBa})");
                             $created++;
                             continue;
                         }
 
-                        // 1. Tahap Pemberitahuan → selesai
-                        $pemberitahuan = TimelineTahapan::firstOrCreate(
-                            [
-                                'pelaku_usaha_id' => $ba->pelaku_usaha_id,
-                                'tahap'           => 'pemberitahuan',
-                            ],
-                            [
-                                'status'  => 'selesai',
-                                'tanggal' => $tanggal,
-                                'catatan' => "Selesai otomatis (backfill) melalui penerbitan {$label} ({$nomorBa})",
-                            ]
-                        );
-                        if ($pemberitahuan->wasRecentlyCreated) {
-                            $created++;
-                        } elseif ($pemberitahuan->status === 'belum') {
-                            $pemberitahuan->update([
-                                'status'  => 'selesai',
-                                'tanggal' => $tanggal,
-                                'catatan' => "Selesai otomatis (backfill) melalui penerbitan {$label} ({$nomorBa})",
-                            ]);
-                            $updated++;
+                        if ($statusBa === 'selesai') {
+                            // Semua tahap langsung selesai
+                            $allStages = ['pemberitahuan', 'pengawasan', 'saran', 'keterangan', 'supervisi', 'ekspose', 'billing'];
+                            foreach ($allStages as $tahap) {
+                                $record = TimelineTahapan::firstOrCreate(
+                                    ['pelaku_usaha_id' => $ba->pelaku_usaha_id, 'tahap' => $tahap],
+                                    [
+                                        'status'  => 'selesai',
+                                        'tanggal' => $tanggal,
+                                        'catatan' => "Selesai otomatis (backfill) — {$label} ({$nomorBa}) berstatus Selesai",
+                                    ]
+                                );
+                                if ($record->wasRecentlyCreated) {
+                                    $created++;
+                                } elseif ($record->status !== 'selesai') {
+                                    $record->update([
+                                        'status'  => 'selesai',
+                                        'tanggal' => $tanggal,
+                                        'catatan' => "Selesai otomatis (backfill) — {$label} ({$nomorBa}) berstatus Selesai",
+                                    ]);
+                                    $updated++;
+                                } else {
+                                    $skipped++;
+                                }
+                            }
                         } else {
-                            $skipped++;
-                        }
+                            // Tindak lanjut (atau status lama: draft/proses) → mulai dari pengawasan
+                            // 1. Tahap Pemberitahuan → selesai
+                            $pemberitahuan = TimelineTahapan::firstOrCreate(
+                                ['pelaku_usaha_id' => $ba->pelaku_usaha_id, 'tahap' => 'pemberitahuan'],
+                                [
+                                    'status'  => 'selesai',
+                                    'tanggal' => $tanggal,
+                                    'catatan' => "Selesai otomatis (backfill) melalui penerbitan {$label} ({$nomorBa})",
+                                ]
+                            );
+                            if ($pemberitahuan->wasRecentlyCreated) {
+                                $created++;
+                            } elseif ($pemberitahuan->status === 'belum') {
+                                $pemberitahuan->update([
+                                    'status'  => 'selesai',
+                                    'tanggal' => $tanggal,
+                                    'catatan' => "Selesai otomatis (backfill) melalui penerbitan {$label} ({$nomorBa})",
+                                ]);
+                                $updated++;
+                            } else {
+                                $skipped++;
+                            }
 
-                        // 2. Tahap Pengawasan → proses
-                        $pengawasan = TimelineTahapan::firstOrCreate(
-                            [
-                                'pelaku_usaha_id' => $ba->pelaku_usaha_id,
-                                'tahap'           => 'pengawasan',
-                            ],
-                            [
-                                'status'  => 'proses',
-                                'tanggal' => $tanggal,
-                                'catatan' => "Telah terbit {$label}: {$nomorBa} (backfill)",
-                            ]
-                        );
-                        if ($pengawasan->wasRecentlyCreated) {
-                            $created++;
-                        } elseif ($pengawasan->status === 'belum') {
-                            $pengawasan->update([
-                                'status'  => 'proses',
-                                'tanggal' => $tanggal,
-                                'catatan' => "Telah terbit {$label}: {$nomorBa} (backfill)",
-                            ]);
-                            $updated++;
-                        } else {
-                            $skipped++;
+                            // 2. Tahap Pengawasan → proses
+                            $pengawasan = TimelineTahapan::firstOrCreate(
+                                ['pelaku_usaha_id' => $ba->pelaku_usaha_id, 'tahap' => 'pengawasan'],
+                                [
+                                    'status'  => 'proses',
+                                    'tanggal' => $tanggal,
+                                    'catatan' => "Telah terbit {$label}: {$nomorBa} — perlu tindak lanjut (backfill)",
+                                ]
+                            );
+                            if ($pengawasan->wasRecentlyCreated) {
+                                $created++;
+                            } elseif ($pengawasan->status === 'belum') {
+                                $pengawasan->update([
+                                    'status'  => 'proses',
+                                    'tanggal' => $tanggal,
+                                    'catatan' => "Telah terbit {$label}: {$nomorBa} — perlu tindak lanjut (backfill)",
+                                ]);
+                                $updated++;
+                            } else {
+                                $skipped++;
+                            }
                         }
                     }
                 });

@@ -893,9 +893,7 @@
                 <div class="col-md-6">
                     <label class="form-label">Status BA <span class="text-danger">*</span></label>
                     <select name="status" class="form-select form-select-lg" required>
-                        <option value="draft" {{ old('status', $baPencemaran->status ?? '') == 'draft' ? 'selected' : '' }}>Draft</option>
-                        <option value="proses" {{ old('status', $baPencemaran->status ?? '') == 'proses' ? 'selected' : '' }}>Proses</option>
-                        <option value="selesai" {{ old('status', $baPencemaran->status ?? '') == 'selesai' ? 'selected' : '' }}>Selesai</option>
+                        <option value="selesai" {{ old('status', $baPencemaran->status ?? 'selesai') == 'selesai' ? 'selected' : '' }}>Selesai</option>
                         <option value="tindak_lanjut" {{ old('status', $baPencemaran->status ?? '') == 'tindak_lanjut' ? 'selected' : '' }}>Tindak Lanjut</option>
                     </select>
                 </div>

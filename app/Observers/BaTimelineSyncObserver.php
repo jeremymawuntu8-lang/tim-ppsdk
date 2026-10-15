@@ -44,53 +44,83 @@ class BaTimelineSyncObserver
 
         $nomorBa = $model->nomor_ba ?: ('BA-' . $model->id);
         $tanggal = $model->tanggal_pengawasan ?? now();
+        $statusBa = $model->status ?? 'selesai';
 
-        // 1. Selesaikan tahap Pemberitahuan (jika belum selesai)
-        $pemberitahuan = $pelakuUsaha->timelineTahapans()->firstOrCreate(
-            ['tahap' => 'pemberitahuan'],
-            [
-                'status' => 'selesai',
-                'tanggal' => $tanggal,
-                'catatan' => "Selesai otomatis melalui penerbitan {$label} ({$nomorBa})",
-            ]
-        );
-        if ($pemberitahuan->status === 'belum') {
-            $pemberitahuan->update([
-                'status' => 'selesai',
-                'tanggal' => $tanggal,
-                'catatan' => "Selesai otomatis melalui penerbitan {$label} ({$nomorBa})",
-            ]);
-        }
+        if ($statusBa === 'selesai') {
+            // ── STATUS SELESAI: Semua tahap langsung selesai ──
+            $allStages = ['pemberitahuan', 'pengawasan', 'saran', 'keterangan', 'supervisi', 'ekspose', 'billing'];
 
-        // 2. Aktifkan tahap Pengawasan (status: proses atau sesuai status BA)
-        $pengawasan = $pelakuUsaha->timelineTahapans()->firstOrCreate(
-            ['tahap' => 'pengawasan'],
-            [
-                'status' => 'proses',
-                'tanggal' => $tanggal,
-                'catatan' => "Telah terbit {$label}: {$nomorBa}",
-            ]
-        );
-        if ($pengawasan->status === 'belum') {
-            $pengawasan->update([
-                'status' => 'proses',
-                'tanggal' => $tanggal,
-                'catatan' => "Telah terbit {$label}: {$nomorBa}",
-            ]);
-        }
+            foreach ($allStages as $tahap) {
+                $record = $pelakuUsaha->timelineTahapans()->firstOrCreate(
+                    ['tahap' => $tahap],
+                    [
+                        'status'  => 'selesai',
+                        'tanggal' => $tanggal,
+                        'catatan' => "Selesai otomatis — {$label} ({$nomorBa}) berstatus Selesai",
+                    ]
+                );
+                // Jika record sudah ada tapi belum selesai, update ke selesai
+                if (!$record->wasRecentlyCreated && $record->status !== 'selesai') {
+                    $record->update([
+                        'status'  => 'selesai',
+                        'tanggal' => $tanggal,
+                        'catatan' => "Selesai otomatis — {$label} ({$nomorBa}) berstatus Selesai",
+                    ]);
+                }
+            }
+        } else {
+            // ── STATUS TINDAK LANJUT: Timeline mulai dari tahap Pengawasan ──
 
-        // 3. Jika BA memiliki file PDF, daftarkan juga ke TimelineTahapanFile jika belum ada
-        if (!empty($model->file_ba_pdf)) {
-            $fileSudahAda = $pengawasan->files()->where('file_path', $model->file_ba_pdf)->exists();
-            if (!$fileSudahAda) {
-                $kategoriKey = 'ba_' . strtolower(class_basename($model));
-                $pengawasan->files()->create([
-                    'kategori' => $kategoriKey,
-                    'nama_dokumen' => "{$label} ({$nomorBa})",
-                    'file_path' => $model->file_ba_pdf,
-                    'file_name' => basename($model->file_ba_pdf),
-                    'mime_type' => 'application/pdf',
+            // 1. Selesaikan tahap Pemberitahuan
+            $pemberitahuan = $pelakuUsaha->timelineTahapans()->firstOrCreate(
+                ['tahap' => 'pemberitahuan'],
+                [
+                    'status'  => 'selesai',
+                    'tanggal' => $tanggal,
+                    'catatan' => "Selesai otomatis melalui penerbitan {$label} ({$nomorBa})",
+                ]
+            );
+            if ($pemberitahuan->status === 'belum') {
+                $pemberitahuan->update([
+                    'status'  => 'selesai',
+                    'tanggal' => $tanggal,
+                    'catatan' => "Selesai otomatis melalui penerbitan {$label} ({$nomorBa})",
                 ]);
+            }
+
+            // 2. Aktifkan tahap Pengawasan (proses)
+            $pengawasan = $pelakuUsaha->timelineTahapans()->firstOrCreate(
+                ['tahap' => 'pengawasan'],
+                [
+                    'status'  => 'proses',
+                    'tanggal' => $tanggal,
+                    'catatan' => "Telah terbit {$label}: {$nomorBa} — perlu tindak lanjut",
+                ]
+            );
+            if ($pengawasan->status === 'belum') {
+                $pengawasan->update([
+                    'status'  => 'proses',
+                    'tanggal' => $tanggal,
+                    'catatan' => "Telah terbit {$label}: {$nomorBa} — perlu tindak lanjut",
+                ]);
+            }
+        }
+
+        // Jika BA memiliki file PDF, daftarkan ke TimelineTahapanFile
+        if (!empty($model->file_ba_pdf)) {
+            $pengawasan = $pelakuUsaha->timelineTahapans()->where('tahap', 'pengawasan')->first();
+            if ($pengawasan) {
+                $fileSudahAda = $pengawasan->files()->where('file_path', $model->file_ba_pdf)->exists();
+                if (!$fileSudahAda) {
+                    $kategoriKey = 'ba_' . strtolower(class_basename($model));
+                    $pengawasan->files()->create([
+                        'kategori'      => $kategoriKey,
+                        'nama_dokumen'  => "{$label} ({$nomorBa})",
+                        'file_path'     => $model->file_ba_pdf,
+                        'file_name'     => basename($model->file_ba_pdf),
+                        'mime_type'     => 'application/pdf',
+                    ]);
+                }
             }
         }
     }

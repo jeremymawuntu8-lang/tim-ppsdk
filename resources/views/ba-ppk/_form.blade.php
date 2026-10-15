@@ -388,10 +388,8 @@
             <div class="col-md-6 col-12">
                 <label class="form-label">Status Dokumen <span class="text-danger">*</span></label>
                 <select name="status" class="form-select">
-                    <option value="draft" @selected(old('status', $ba->status ?? 'draft') == 'draft')>Draft</option>
-                    <option value="proses" @selected(old('status', $ba->status ?? '') == 'proses')>Proses</option>
-                    <option value="selesai" @selected(old('status', $ba->status ?? '') == 'selesai')>Selesai</option>
-                    <option value="tindak_lanjut" @selected(old('status', $ba->status ?? '') == 'tindak_lanjut')>Perlu Tindak Lanjut</option>
+                    <option value="selesai" @selected(old('status', $ba->status ?? 'selesai') == 'selesai')>Selesai</option>
+                    <option value="tindak_lanjut" @selected(old('status', $ba->status ?? '') == 'tindak_lanjut')>Tindak Lanjut</option>
                 </select>
             </div>
             <div class="col-md-6 col-12">
