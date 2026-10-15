@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Pengawasan;
 
 use App\Http\Controllers\Controller;
-use App\Models\Kabupaten;
 use App\Models\PelakuUsaha;
 use App\Services\TimelinePengawasanService;
 use Illuminate\Http\Request;
@@ -30,7 +29,6 @@ class TimelinePengawasanController extends Controller
             ->when($request->q, fn ($q, $v) => $q->where(function ($q2) use ($v) {
                 $q2->where('nama_perusahaan', 'like', "%{$v}%")->orWhere('nomor_pkkprl', 'like', "%{$v}%");
             }))
-            ->when($request->kabupaten_id, fn ($q, $v) => $q->where('kabupaten_id', $v))
             // Filter berdasarkan jenis pengawasan (BA type)
             ->when($request->pengawasan && $request->pengawasan !== 'semua', function ($q) use ($request) {
                 $relMap = [
@@ -92,14 +90,10 @@ class TimelinePengawasanController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        $kabupatens = Kabupaten::whereIn('id', PelakuUsaha::whereNotNull('kabupaten_id')->distinct()->pluck('kabupaten_id'))
-            ->orderBy('nama')->get(['id', 'nama']);
-
         return view('timeline-pengawasan.index', [
             'items' => $paginated,
             'summary' => $summary,
             'total' => $pelakuUsahas->count(),
-            'kabupatens' => $kabupatens,
             'stages' => TimelinePengawasanService::STAGES,
         ]);
     }

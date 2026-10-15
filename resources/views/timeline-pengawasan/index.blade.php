@@ -79,21 +79,13 @@
             <form method="GET" action="{{ route('timeline-pengawasan.index') }}" class="row g-2 align-items-center">
                 @if($tahap)<input type="hidden" name="tahap" value="{{ $tahap }}">@endif
                 @if(request()->boolean('semua'))<input type="hidden" name="semua" value="1">@endif
-                <div class="col-md-3 col-12">
+                <div class="col-md-4 col-12">
                     <div class="input-group input-group-sm">
                         <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
                         <input type="text" name="q" id="timeline-search" class="form-control" placeholder="Cari nama perusahaan / nomor PKKPRL..." value="{{ request('q') }}">
                     </div>
                 </div>
-                <div class="col-md-2 col-6">
-                    <select name="kabupaten_id" id="timeline-kabupaten" class="form-select form-select-sm">
-                        <option value="">-- Semua Kabupaten/Kota --</option>
-                        @foreach($kabupatens as $kab)
-                            <option value="{{ $kab->id }}" @selected(request('kabupaten_id') == $kab->id)>{{ $kab->nama }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-2 col-6">
+                <div class="col-md-3 col-6">
                     <select name="pengawasan" id="timeline-pengawasan" class="form-select form-select-sm">
                         <option value="">-- Pengawasan --</option>
                         <option value="prl" @selected(request('pengawasan') === 'prl')>PRL</option>
@@ -113,7 +105,7 @@
                 </div>
                 <div class="col-md-3 col-12 d-flex gap-2">
                     <button type="submit" class="btn btn-sm btn-primary flex-fill"><i class="fas fa-filter me-1"></i> Terapkan</button>
-                    @if(request()->anyFilled(['q', 'kabupaten_id', 'urut', 'tahap', 'pengawasan']))
+                    @if(request()->anyFilled(['q', 'urut', 'tahap', 'pengawasan']))
                         <a href="{{ route('timeline-pengawasan.index') }}" class="btn btn-sm btn-outline-secondary"><i class="fas fa-times"></i></a>
                     @endif
                 </div>
