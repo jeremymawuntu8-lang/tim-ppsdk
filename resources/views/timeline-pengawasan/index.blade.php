@@ -1,9 +1,9 @@
 @extends('layouts.app')
-@section('title', 'Timeline Pengawasan')
-@section('page-title', 'Timeline Pengawasan')
+@section('title', 'Tindak Lanjut')
+@section('page-title', 'Tindak Lanjut')
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-    <li class="breadcrumb-item active">Timeline Pengawasan</li>
+    <li class="breadcrumb-item active">Tindak Lanjut</li>
 @endsection
 
 @php
@@ -38,7 +38,7 @@
     <div class="card card-primary card-outline shadow-sm mb-4">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
-                <h5 class="card-title fw-bold mb-0 text-dark"><i class="fas fa-timeline me-2 text-primary"></i>Progres Pengawasan Seluruh Pelaku Usaha</h5>
+                <h5 class="card-title fw-bold mb-0 text-dark"><i class="fas fa-list-check me-2 text-primary"></i>Progres Tindak Lanjut Pengawasan</h5>
                 <small class="text-muted">
                     {{ number_format($total) }} pelaku usaha
                     {{ request()->boolean('semua') ? '(semua pelaku usaha)' : 'yang tercatat di menu Pengawasan' }}

@@ -22,12 +22,12 @@
                     </a>
                 </li>
 
-                {{-- Timeline Pengawasan --}}
+                {{-- Tindak Lanjut --}}
                 @can('kelola-pengawasan')
                 <li class="nav-item">
                     <a href="{{ route('timeline-pengawasan.index') }}" class="nav-link {{ request()->routeIs('timeline-pengawasan.*') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-timeline text-info"></i>
-                        <p>Timeline Pengawasan</p>
+                        <i class="nav-icon fas fa-list-check text-info"></i>
+                        <p>Tindak Lanjut</p>
                     </a>
                 </li>
                 @endcan

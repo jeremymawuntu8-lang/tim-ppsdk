@@ -142,7 +142,7 @@
                 <h3 class="card-title"><i class="fas fa-timeline me-2 text-primary"></i>Progres Tahapan Pengawasan</h3>
                 @can('kelola-pengawasan')
                     <a href="{{ route('timeline-pengawasan.show', $pelakuUsaha->id) }}" class="btn btn-sm btn-outline-primary ms-auto">
-                        <i class="fas fa-up-right-from-square me-1"></i> Lihat Timeline Lengkap
+                        <i class="fas fa-up-right-from-square me-1"></i> Lihat Tindak Lanjut
                     </a>
                 @endcan
             </div>

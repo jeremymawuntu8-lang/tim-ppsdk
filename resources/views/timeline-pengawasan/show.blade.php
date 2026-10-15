@@ -1,9 +1,9 @@
 @extends('layouts.app')
-@section('title', 'Detail Timeline Pengawasan - ' . $pelakuUsaha->nama_perusahaan)
-@section('page-title', 'Detail Timeline Pengawasan')
+@section('title', 'Detail Tindak Lanjut - ' . $pelakuUsaha->nama_perusahaan)
+@section('page-title', 'Detail Tindak Lanjut')
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-    <li class="breadcrumb-item"><a href="{{ route('timeline-pengawasan.index') }}">Timeline</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('timeline-pengawasan.index') }}">Tindak Lanjut</a></li>
     <li class="breadcrumb-item active">{{ \Illuminate\Support\Str::limit($pelakuUsaha->nama_perusahaan, 35) }}</li>
 @endsection
 
@@ -1344,7 +1344,7 @@
                     <div class="alert alert-info border-0 rounded-3 py-2 px-3 small mb-3 d-flex align-items-start gap-2">
                         <i class="fas fa-arrows-rotate text-primary mt-1"></i>
                         <div>
-                            <strong>Sinkronisasi Dua Arah:</strong> Dokumen yang Anda unggah akan otomatis terdata dan menambah record Berita Acara di menu sistem pengawasan yang dipilih (misal: <em>BA WAS PRL</em>), sekaligus tampil di timeline ini.
+                            <strong>Sinkronisasi Dua Arah:</strong> Dokumen yang Anda unggah akan otomatis terdata dan menambah record Berita Acara di menu sistem pengawasan yang dipilih (misal: <em>BA WAS PRL</em>), sekaligus tampil di tahapan tindak lanjut ini.
                         </div>
                     </div>
 
