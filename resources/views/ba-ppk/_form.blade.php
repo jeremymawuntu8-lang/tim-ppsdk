@@ -390,6 +390,8 @@
                 <select name="status" class="form-select">
                     <option value="selesai" @selected(old('status', $ba->status ?? 'selesai') == 'selesai')>Selesai</option>
                     <option value="tindak_lanjut" @selected(old('status', $ba->status ?? '') == 'tindak_lanjut')>Tindak Lanjut</option>
+                    <option value="proses" @selected(old('status', $ba->status ?? '') == 'proses')>Proses</option>
+                    <option value="draft" @selected(old('status', $ba->status ?? '') == 'draft')>Draft</option>
                 </select>
             </div>
             <div class="col-md-6 col-12">

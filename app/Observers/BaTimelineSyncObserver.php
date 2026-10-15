@@ -7,6 +7,7 @@ use App\Models\BaPpk;
 use App\Models\BaReklamasi;
 use App\Models\BaWasAlse;
 use App\Models\BaWasPrl;
+use App\Models\PelakuUsaha;
 use App\Models\TimelineTahapan;
 use App\Models\TimelineTahapanFile;
 
@@ -28,7 +29,7 @@ class BaTimelineSyncObserver
             return;
         }
 
-        $pelakuUsaha = $model->pelakuUsaha;
+        $pelakuUsaha = PelakuUsaha::find($model->pelaku_usaha_id);
         if (!$pelakuUsaha) {
             return;
         }
@@ -47,11 +48,11 @@ class BaTimelineSyncObserver
         $statusBa = $model->status ?? 'selesai';
 
         if ($statusBa === 'selesai') {
-            // ── STATUS SELESAI: Semua tahap langsung selesai ──
+            // ── STATUS SELESAI: Semua 7 tahap langsung selesai ──
             $allStages = ['pemberitahuan', 'pengawasan', 'saran', 'keterangan', 'supervisi', 'ekspose', 'billing'];
 
             foreach ($allStages as $tahap) {
-                $record = $pelakuUsaha->timelineTahapans()->firstOrCreate(
+                $pelakuUsaha->timelineTahapans()->updateOrCreate(
                     ['tahap' => $tahap],
                     [
                         'status'  => 'selesai',
@@ -59,20 +60,12 @@ class BaTimelineSyncObserver
                         'catatan' => "Selesai otomatis — {$label} ({$nomorBa}) berstatus Selesai",
                     ]
                 );
-                // Jika record sudah ada tapi belum selesai, update ke selesai
-                if (!$record->wasRecentlyCreated && $record->status !== 'selesai') {
-                    $record->update([
-                        'status'  => 'selesai',
-                        'tanggal' => $tanggal,
-                        'catatan' => "Selesai otomatis — {$label} ({$nomorBa}) berstatus Selesai",
-                    ]);
-                }
             }
         } else {
-            // ── STATUS TINDAK LANJUT: Timeline mulai dari tahap Pengawasan ──
+            // ── STATUS TINDAK LANJUT / PROSES / DRAFT: Timeline mulai dari tahap Pengawasan ──
 
             // 1. Selesaikan tahap Pemberitahuan
-            $pemberitahuan = $pelakuUsaha->timelineTahapans()->firstOrCreate(
+            $pelakuUsaha->timelineTahapans()->updateOrCreate(
                 ['tahap' => 'pemberitahuan'],
                 [
                     'status'  => 'selesai',
@@ -80,16 +73,9 @@ class BaTimelineSyncObserver
                     'catatan' => "Selesai otomatis melalui penerbitan {$label} ({$nomorBa})",
                 ]
             );
-            if ($pemberitahuan->status === 'belum') {
-                $pemberitahuan->update([
-                    'status'  => 'selesai',
-                    'tanggal' => $tanggal,
-                    'catatan' => "Selesai otomatis melalui penerbitan {$label} ({$nomorBa})",
-                ]);
-            }
 
             // 2. Aktifkan tahap Pengawasan (proses)
-            $pengawasan = $pelakuUsaha->timelineTahapans()->firstOrCreate(
+            $pelakuUsaha->timelineTahapans()->updateOrCreate(
                 ['tahap' => 'pengawasan'],
                 [
                     'status'  => 'proses',
@@ -97,12 +83,17 @@ class BaTimelineSyncObserver
                     'catatan' => "Telah terbit {$label}: {$nomorBa} — perlu tindak lanjut",
                 ]
             );
-            if ($pengawasan->status === 'belum') {
-                $pengawasan->update([
-                    'status'  => 'proses',
-                    'tanggal' => $tanggal,
-                    'catatan' => "Telah terbit {$label}: {$nomorBa} — perlu tindak lanjut",
-                ]);
+
+            // 3. Reset tahapan setelah pengawasan jika sebelumnya di-set 'Selesai otomatis'
+            $subsequentStages = ['saran', 'keterangan', 'supervisi', 'ekspose', 'billing'];
+            foreach ($subsequentStages as $st) {
+                $rec = $pelakuUsaha->timelineTahapans()->where('tahap', $st)->first();
+                if ($rec && str_contains($rec->catatan ?? '', 'Selesai otomatis')) {
+                    $rec->update([
+                        'status'  => 'belum',
+                        'catatan' => null,
+                    ]);
+                }
             }
         }
 

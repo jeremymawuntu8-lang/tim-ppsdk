@@ -207,7 +207,7 @@
             <div class="col-md-6 col-12">
                 <label class="form-label">Status BA <span class="text-danger">*</span></label>
                 <select name="status" class="form-select">
-                    @foreach(['selesai'=>'Selesai','tindak_lanjut'=>'Tindak Lanjut'] as $val => $label)
+                    @foreach(['selesai'=>'Selesai','tindak_lanjut'=>'Tindak Lanjut','proses'=>'Proses','draft'=>'Draft'] as $val => $label)
                         <option value="{{ $val }}" @selected(old('status', $baReklamasi->status ?? 'selesai') == $val)>{{ $label }}</option>
                     @endforeach
                 </select>

@@ -895,6 +895,8 @@
                     <select name="status" class="form-select form-select-lg" required>
                         <option value="selesai" {{ old('status', $baPencemaran->status ?? 'selesai') == 'selesai' ? 'selected' : '' }}>Selesai</option>
                         <option value="tindak_lanjut" {{ old('status', $baPencemaran->status ?? '') == 'tindak_lanjut' ? 'selected' : '' }}>Tindak Lanjut</option>
+                        <option value="proses" {{ old('status', $baPencemaran->status ?? '') == 'proses' ? 'selected' : '' }}>Proses</option>
+                        <option value="draft" {{ old('status', $baPencemaran->status ?? '') == 'draft' ? 'selected' : '' }}>Draft</option>
                     </select>
                 </div>
             </div>

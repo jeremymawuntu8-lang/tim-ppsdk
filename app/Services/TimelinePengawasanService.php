@@ -77,6 +77,9 @@ class TimelinePengawasanService
         $jadwals = ($pu->jadwalPengawasans ?? collect())->where('status', '!=', 'dibatalkan');
         $tahapans = $pu->timelineTahapans ?? collect();
 
+        // ── Auto-rekonsiliasi jika status BA belum tersinkron ke timeline_tahapans di database ──
+        $this->reconcileStagesFromBa($pu, $bas, $tahapans);
+
         $stages = $this->computeStages($tahapans);
 
         // Tahap aktif = tahap pertama yang belum selesai/dilewati
@@ -108,6 +111,74 @@ class TimelinePengawasanService
             'total_ba' => $bas->count(),
             'events' => $withEvents ? $this->buildEvents($bas, $ptls, $sps, $jadwals) : collect(),
         ];
+    }
+
+    /**
+     * Memastikan data tahapan di timeline_tahapans sinkron dengan status BA terbaru.
+     * Jika BA berstatus Selesai, semua tahapan dipastikan selesai.
+     * Jika BA berstatus Tindak Lanjut / Proses / Draft, tahapan dipastikan mulai dari pengawasan.
+     */
+    protected function reconcileStagesFromBa(PelakuUsaha $pu, Collection $bas, &$tahapans): void
+    {
+        if ($bas->isEmpty()) {
+            return;
+        }
+
+        // Ambil BA terbaru berdasarkan tanggal
+        $latestBa = $bas->sortByDesc(function ($b) {
+            $t = $b->tanggal ?? null;
+            return $t ? Carbon::parse($t)->timestamp : 0;
+        })->first();
+
+        if (!$latestBa) {
+            return;
+        }
+
+        $statusBa = $latestBa->status ?? 'selesai';
+        $tanggal = $latestBa->tanggal ?? now();
+        $label = $latestBa->label ?? 'Berita Acara';
+
+        if ($statusBa === 'selesai') {
+            $doneCount = $tahapans->where('status', 'selesai')->count();
+            if ($doneCount < count(self::STAGES)) {
+                foreach (array_keys(self::STAGES) as $st) {
+                    $pu->timelineTahapans()->updateOrCreate(
+                        ['tahap' => $st],
+                        [
+                            'status'  => 'selesai',
+                            'tanggal' => $tanggal,
+                            'catatan' => "Selesai otomatis — {$label} berstatus Selesai",
+                        ]
+                    );
+                }
+                $pu->unsetRelation('timelineTahapans');
+                $tahapans = $pu->timelineTahapans()->get();
+            }
+        } else {
+            $pemberitahuanDone = $tahapans->firstWhere('tahap', 'pemberitahuan')?->status === 'selesai';
+            $hasPengawasan = $tahapans->contains('tahap', 'pengawasan');
+
+            if (!$pemberitahuanDone || !$hasPengawasan) {
+                $pu->timelineTahapans()->updateOrCreate(
+                    ['tahap' => 'pemberitahuan'],
+                    [
+                        'status'  => 'selesai',
+                        'tanggal' => $tanggal,
+                        'catatan' => "Selesai otomatis melalui penerbitan {$label}",
+                    ]
+                );
+                $pu->timelineTahapans()->updateOrCreate(
+                    ['tahap' => 'pengawasan'],
+                    [
+                        'status'  => 'proses',
+                        'tanggal' => $tanggal,
+                        'catatan' => "Telah terbit {$label} — perlu tindak lanjut",
+                    ]
+                );
+                $pu->unsetRelation('timelineTahapans');
+                $tahapans = $pu->timelineTahapans()->get();
+            }
+        }
     }
 
     /**
