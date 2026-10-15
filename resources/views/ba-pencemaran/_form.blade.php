@@ -39,6 +39,18 @@
                     <label class="form-label">Nomor BA</label>
                     <input type="text" class="form-control" name="nomor_ba" value="{{ old('nomor_ba', $baPencemaran->nomor_ba ?? '') }}">
                 </div>
+                <div class="col-md-12">
+                    <label class="form-label fw-bold text-dark">Pelaku Usaha / Perusahaan <span class="text-danger">*</span></label>
+                    <select class="form-select" id="pelaku_usaha_id" name="pelaku_usaha_id" required>
+                        <option value="">-- Pilih dari Master Data atau Ketik Nama Perusahaan Baru --</option>
+                        @foreach($pelakuUsahas as $pu)
+                            <option value="{{ $pu->id }}" data-nib="{{ $pu->nib }}" data-pj="{{ $pu->nama_pj }}" {{ old('pelaku_usaha_id', $baPencemaran->pelaku_usaha_id ?? '') == $pu->id ? 'selected' : '' }}>
+                                {{ $pu->nama_perusahaan }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <div class="form-text text-primary" style="font-size: 0.8rem;"><i class="fas fa-info-circle me-1"></i><strong>Wajib dipilih/diisi:</strong> Dokumen BA ini akan langsung terhubung ke Timeline Tindak Lanjut perusahaan yang dipilih.</div>
+                </div>
                 <div class="col-md-6">
                     <label class="form-label">Tanggal Pengawasan</label>
                     <input type="date" class="form-control" name="tanggal_pengawasan" value="{{ old('tanggal_pengawasan', optional($baPencemaran ?? null)->tanggal_pengawasan?->format('Y-m-d')) }}">
@@ -139,19 +151,7 @@
         <div class="tab-pane fade" id="tab-profil" role="tabpanel" aria-labelledby="tab-profil-tab">
             <h6 class="section-title mb-3">B. Informasi Pelaku Usaha / Pelaku Kegiatan</h6>
             <div class="row g-3">
-                <div class="col-md-12">
-                    <label class="form-label fw-bold text-dark">Pelaku Usaha / Perusahaan <span class="text-danger">*</span></label>
-                    <select class="form-select" id="pelaku_usaha_id" name="pelaku_usaha_id">
-                        <option value="">-- Pilih dari Master Data atau Ketik Nama Perusahaan Baru --</option>
-                        @foreach($pelakuUsahas as $pu)
-                            <option value="{{ $pu->id }}" data-nib="{{ $pu->nib }}" data-pj="{{ $pu->nama_pj }}" {{ old('pelaku_usaha_id', $baPencemaran->pelaku_usaha_id ?? '') == $pu->id ? 'selected' : '' }}>
-                                {{ $pu->nama_perusahaan }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <div class="form-text text-primary"><i class="fas fa-info-circle me-1"></i><strong>Penting:</strong> Pilih atau ketik nama perusahaan agar Berita Acara ini otomatis terhubung dan tercatat pada Timeline Tindak Lanjut.</div>
-                </div>
-                
+
                 <div class="col-md-6">
                     <label class="form-label">Nama Usaha / Nama Kegiatan (opsional)</label>
                     <input type="text" class="form-control" name="nama_usaha_kegiatan" value="{{ old('nama_usaha_kegiatan', $baPencemaran->nama_usaha_kegiatan ?? '') }}">

@@ -62,6 +62,16 @@
                 <label class="form-label">Unit Kerja <small class="text-muted">(Nama UPT/Satwas/Wilker)</small></label>
                 <input type="text" name="unit_kerja" class="form-control" value="{{ old('unit_kerja', $ba->unit_kerja ?? '') }}">
             </div>
+            <div class="col-12">
+                <label class="form-label fw-bold text-dark">Pelaku Usaha / Perusahaan <span class="text-danger">*</span></label>
+                <select name="pelaku_usaha_id" id="pelakuUsahaSelect" class="form-select" style="width: 100%;" required>
+                    <option value="">-- Pilih dari Master Data atau Ketik Nama Perusahaan Baru --</option>
+                    @foreach($pelakuUsahas ?? [] as $pu)
+                        <option value="{{ $pu->id }}" @selected(old('pelaku_usaha_id', $ba->pelaku_usaha_id ?? null) == $pu->id)>{{ $pu->nama_perusahaan }}</option>
+                    @endforeach
+                </select>
+                <div class="form-text text-primary" style="font-size:0.8rem;"><i class="fas fa-info-circle me-1"></i>Pilih perusahaan agar dokumen BA ini otomatis tercatat dan melacak progres di Timeline Tindak Lanjut.</div>
+            </div>
             <div class="col-md-4 col-12">
                 <label class="form-label">Tanggal Pengawasan <span class="text-danger">*</span></label>
                 <input type="date" name="tanggal_pengawasan" class="form-control" value="{{ old('tanggal_pengawasan', $ba?->tanggal_pengawasan?->format('Y-m-d') ?? date('Y-m-d')) }}" required>
@@ -109,17 +119,7 @@
     {{-- TAB 3: Profil Usaha --}}
     <div class="tab-pane fade" id="tab-profil">
         <div class="row g-3">
-            <div class="col-12">
-                <label class="form-label">Pelaku Usaha Utama (Opsional)</label>
-                <select name="pelaku_usaha_id" id="pelakuUsahaSelect" class="form-select" style="width: 100%;">
-                    <option value="">-- Pilih atau Ketik Nama Baru --</option>
-                    @foreach($pelakuUsahas ?? [] as $pu)
-                        <option value="{{ $pu->id }}" @selected(old('pelaku_usaha_id', $ba->pelaku_usaha_id ?? null) == $pu->id)>{{ $pu->nama_perusahaan }}</option>
-                    @endforeach
-                </select>
-                <div class="form-text">Pilih agar terkoneksi dengan database, atau ketik langsung.</div>
-            </div>
-            
+
             <div class="col-md-6 col-12">
                 <label class="form-label">Nama Penanggung Jawab</label>
                 <input type="text" name="nama_pj" class="form-control pj-nama-input" value="{{ old('nama_pj', $ba->nama_pj ?? '') }}">
