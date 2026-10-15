@@ -79,18 +79,29 @@
             <form method="GET" action="{{ route('timeline-pengawasan.index') }}" class="row g-2 align-items-center">
                 @if($tahap)<input type="hidden" name="tahap" value="{{ $tahap }}">@endif
                 @if(request()->boolean('semua'))<input type="hidden" name="semua" value="1">@endif
-                <div class="col-md-4 col-12">
+                <div class="col-md-3 col-12">
                     <div class="input-group input-group-sm">
                         <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
                         <input type="text" name="q" id="timeline-search" class="form-control" placeholder="Cari nama perusahaan / nomor PKKPRL..." value="{{ request('q') }}">
                     </div>
                 </div>
-                <div class="col-md-3 col-6">
+                <div class="col-md-2 col-6">
                     <select name="kabupaten_id" id="timeline-kabupaten" class="form-select form-select-sm">
                         <option value="">-- Semua Kabupaten/Kota --</option>
                         @foreach($kabupatens as $kab)
                             <option value="{{ $kab->id }}" @selected(request('kabupaten_id') == $kab->id)>{{ $kab->nama }}</option>
                         @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2 col-6">
+                    <select name="pengawasan" id="timeline-pengawasan" class="form-select form-select-sm">
+                        <option value="">-- Pengawasan --</option>
+                        <option value="prl" @selected(request('pengawasan') === 'prl')>PRL</option>
+                        <option value="alse" @selected(request('pengawasan') === 'alse')>ALSE</option>
+                        <option value="reklamasi" @selected(request('pengawasan') === 'reklamasi')>Reklamasi</option>
+                        <option value="ppk" @selected(request('pengawasan') === 'ppk')>PPK</option>
+                        <option value="pencemaran" @selected(request('pengawasan') === 'pencemaran')>Pencemaran</option>
+                        <option value="semua" @selected(request('pengawasan') === 'semua')>Tampilkan Semua</option>
                     </select>
                 </div>
                 <div class="col-md-2 col-6">
@@ -102,7 +113,7 @@
                 </div>
                 <div class="col-md-3 col-12 d-flex gap-2">
                     <button type="submit" class="btn btn-sm btn-primary flex-fill"><i class="fas fa-filter me-1"></i> Terapkan</button>
-                    @if(request()->anyFilled(['q', 'kabupaten_id', 'urut', 'tahap']))
+                    @if(request()->anyFilled(['q', 'kabupaten_id', 'urut', 'tahap', 'pengawasan']))
                         <a href="{{ route('timeline-pengawasan.index') }}" class="btn btn-sm btn-outline-secondary"><i class="fas fa-times"></i></a>
                     @endif
                 </div>
@@ -214,6 +225,6 @@
 @push('scripts')
 <script>
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
-    $('#timeline-kabupaten, #timeline-urut').on('change', function () { this.form.submit(); });
+    $('#timeline-kabupaten, #timeline-urut, #timeline-pengawasan').on('change', function () { this.form.submit(); });
 </script>
 @endpush

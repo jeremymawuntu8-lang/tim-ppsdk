@@ -31,6 +31,20 @@ class TimelinePengawasanController extends Controller
                 $q2->where('nama_perusahaan', 'like', "%{$v}%")->orWhere('nomor_pkkprl', 'like', "%{$v}%");
             }))
             ->when($request->kabupaten_id, fn ($q, $v) => $q->where('kabupaten_id', $v))
+            // Filter berdasarkan jenis pengawasan (BA type)
+            ->when($request->pengawasan && $request->pengawasan !== 'semua', function ($q) use ($request) {
+                $relMap = [
+                    'prl'        => 'baWasPrls',
+                    'alse'       => 'baWasAlses',
+                    'reklamasi'  => 'baReklamasis',
+                    'ppk'        => 'baPpks',
+                    'pencemaran' => 'baPencemarans',
+                ];
+                $rel = $relMap[$request->pengawasan] ?? null;
+                if ($rel) {
+                    $q->whereHas($rel);
+                }
+            })
             ->orderBy('nama_perusahaan')
             ->get();
 
