@@ -138,6 +138,26 @@
                                             <i class="fas fa-location-dot me-1"></i>{{ $pu->kabupaten->nama ?? '-' }}
                                             @if($pu->jenisUsaha) · {{ $pu->jenisUsaha->nama }} @endif
                                         </div>
+                                        @php
+                                            $baTagMap = [
+                                                'baWasPrls'     => ['label' => 'PRL',        'color' => 'primary'],
+                                                'baWasAlses'    => ['label' => 'ALSE',       'color' => 'info'],
+                                                'baReklamasis'  => ['label' => 'Reklamasi',  'color' => 'teal'],
+                                                'baPpks'        => ['label' => 'PPK',        'color' => 'indigo'],
+                                                'baPencemarans' => ['label' => 'Pencemaran', 'color' => 'orange'],
+                                            ];
+                                        @endphp
+                                        @if(collect($baTagMap)->keys()->contains(fn($rel) => $pu->{$rel}->isNotEmpty()))
+                                            <div class="d-flex flex-wrap gap-1 mt-1">
+                                                @foreach($baTagMap as $rel => $tag)
+                                                    @if($pu->{$rel}->isNotEmpty())
+                                                        <span class="badge bg-{{ $tag['color'] }}" style="font-size: .65rem; font-weight: 600;">
+                                                            <i class="fas fa-file-circle-check me-1"></i>{{ $tag['label'] }} ({{ $pu->{$rel}->count() }})
+                                                        </span>
+                                                    @endif
+                                                @endforeach
+                                            </div>
+                                        @endif
                                     </td>
                                     <td><x-timeline-stepper :stages="$t['stages']" size="sm" /></td>
                                     <td>

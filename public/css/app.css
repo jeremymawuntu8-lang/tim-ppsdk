@@ -1932,6 +1932,12 @@ html {
 .tl-c-indigo    { --tl-color: #3949AB; --tl-soft: rgba(57, 73, 171, 0.10); }
 .tl-c-orange    { --tl-color: #EF6C00; --tl-soft: rgba(239, 108, 0, 0.11); }
 
+/* Extra bg-* utilities (not in Bootstrap 5 by default) */
+.bg-teal   { background-color: #00897B !important; color: #fff !important; }
+.bg-orange { background-color: #EF6C00 !important; color: #fff !important; }
+.bg-indigo { background-color: #3949AB !important; color: #fff !important; }
+.bg-purple { background-color: #7B1FA2 !important; color: #fff !important; }
+
 /* ---- Stepper ---- */
 .tl-stepper-wrap { overflow-x: auto; padding: 0.25rem 0 0.5rem; }
 .tl-stepper {
