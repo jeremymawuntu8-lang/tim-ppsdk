@@ -52,7 +52,7 @@ class BaPpkController extends Controller
         $data['pelaku_usaha_id'] = $this->resolvePelakuUsahaId($data['pelaku_usaha_id'] ?? null, null, $data['alamat_pj'] ?? null);
         
         $this->sanitizeBooleans($data);
-        unset($data['foto'], $data['pengawas']);
+        unset($data['foto'], $data['pengawas'], $data['files_arsip']);
 
         $data['ttd_pelaku_usaha'] = $this->simpanTandaTangan($data['ttd_pelaku_usaha'] ?? null);
         $data['ttd_pengawas_1'] = $this->simpanTandaTangan($data['ttd_pengawas_1'] ?? null);
@@ -98,7 +98,7 @@ class BaPpkController extends Controller
         $data['pelaku_usaha_id'] = $this->resolvePelakuUsahaId($data['pelaku_usaha_id'] ?? null, null, $data['alamat_pj'] ?? null);
         
         $this->sanitizeBooleans($data);
-        unset($data['foto'], $data['pengawas']);
+        unset($data['foto'], $data['pengawas'], $data['files_arsip']);
 
         $data['ttd_pelaku_usaha'] = $this->simpanTandaTangan($data['ttd_pelaku_usaha'] ?? null);
         $data['ttd_pengawas_1'] = $this->simpanTandaTangan($data['ttd_pengawas_1'] ?? null);

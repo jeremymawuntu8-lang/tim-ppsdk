@@ -219,22 +219,25 @@
                             @if($pemberitahuanFile)
                                 <div class="p-3 border rounded-3 bg-light d-flex align-items-center justify-content-between mb-3">
                                     <div class="d-flex align-items-center gap-3">
-                                        <div class="rounded-3 bg-primary-subtle text-primary p-2">
-                                            <i class="fas fa-file-pdf fs-4 text-danger"></i>
+                                        <div class="rounded-3 {{ $pemberitahuanFile->isLink() ? 'bg-success-subtle text-success' : 'bg-primary-subtle text-primary' }} p-2">
+                                            <i class="{{ $pemberitahuanFile->icon_class }} fs-4"></i>
                                         </div>
                                         <div>
                                             <div class="fw-bold text-dark text-truncate" style="max-width: 320px;">
+                                                @if($pemberitahuanFile->isLink())
+                                                    <span class="badge bg-success-subtle text-success border border-success-subtle me-1"><i class="fab fa-google-drive me-1"></i>Drive</span>
+                                                @endif
                                                 {{ $pemberitahuanFile->file_name ?? $pemberitahuanFile->nama_dokumen }}
                                             </div>
                                             <div class="text-muted" style="font-size: 0.75rem;">
-                                                Diunggah {{ $pemberitahuanFile->created_at->format('d M Y H:i') }}
-                                                @if($pemberitahuanFile->formatted_size) &bull; {{ $pemberitahuanFile->formatted_size }} @endif
+                                                {{ $pemberitahuanFile->isLink() ? 'Tautan disimpan' : 'Diunggah' }} {{ $pemberitahuanFile->created_at->format('d M Y H:i') }}
+                                                @if($pemberitahuanFile->isFile() && $pemberitahuanFile->formatted_size) &bull; {{ $pemberitahuanFile->formatted_size }} @endif
                                             </div>
                                         </div>
                                     </div>
                                     <div class="d-flex gap-1">
-                                        <a href="{{ asset('storage/' . $pemberitahuanFile->file_path) }}" target="_blank" class="btn btn-sm btn-outline-primary" title="Buka File">
-                                            <i class="fas fa-eye"></i>
+                                        <a href="{{ $pemberitahuanFile->url }}" target="_blank" class="btn btn-sm {{ $pemberitahuanFile->isLink() ? 'btn-outline-success' : 'btn-outline-primary' }}" title="{{ $pemberitahuanFile->isLink() ? 'Buka Link Google Drive' : 'Buka File' }}">
+                                            <i class="{{ $pemberitahuanFile->isLink() ? 'fas fa-external-link-alt' : 'fas fa-eye' }}"></i>
                                         </a>
                                         <button type="button" class="btn btn-sm btn-outline-danger" title="Hapus" onclick="confirmDeleteFile('{{ route('timeline-tahapan-file.destroy', $pemberitahuanFile->id) }}', 'Surat Pemberitahuan')">
                                             <i class="fas fa-trash"></i>
@@ -248,12 +251,39 @@
                                     <input type="hidden" name="kategori" value="surat_pemberitahuan">
                                     <input type="hidden" name="nama_dokumen" value="Surat Pemberitahuan Pengawasan">
 
-                                    <div class="mb-3">
-                                        <label class="form-label small fw-semibold text-dark">Pilih File Surat Pemberitahuan (PDF/DOCX/JPG)</label>
-                                        <input type="file" class="form-control" name="file" required>
+                                    <div class="mb-2">
+                                        <div class="d-flex gap-3 mb-2 p-2 bg-light rounded-2 border">
+                                            <div class="form-check mb-0">
+                                                <input class="form-check-input" type="radio" name="tipe" id="tipePemberitahuanFile" value="file" checked onchange="togglePemberitahuanTipe('file')">
+                                                <label class="form-check-label small fw-semibold text-dark" for="tipePemberitahuanFile">
+                                                    <i class="fas fa-file-upload text-primary me-1"></i> File
+                                                </label>
+                                            </div>
+                                            <div class="form-check mb-0">
+                                                <input class="form-check-input" type="radio" name="tipe" id="tipePemberitahuanLink" value="link" onchange="togglePemberitahuanTipe('link')">
+                                                <label class="form-check-label small fw-semibold text-dark" for="tipePemberitahuanLink">
+                                                    <i class="fab fa-google-drive text-success me-1"></i> Link Google Drive
+                                                </label>
+                                            </div>
+                                        </div>
                                     </div>
+
+                                    <div class="mb-3" id="wrapperPemberitahuanFile">
+                                        <label class="form-label small fw-semibold text-dark">Pilih File Surat Pemberitahuan</label>
+                                        <input type="file" class="form-control form-control-sm" name="file" id="inputPemberitahuanFile" required>
+                                        <div class="form-text small" style="font-size: 0.72rem;">Format: PDF, DOCX, JPG (Maks 50MB)</div>
+                                    </div>
+
+                                    <div class="mb-3" id="wrapperPemberitahuanLink" style="display: none;">
+                                        <label class="form-label small fw-semibold text-dark">URL Link Google Drive</label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-white"><i class="fab fa-google-drive text-success"></i></span>
+                                            <input type="url" name="link_drive" id="inputPemberitahuanLink" class="form-control" placeholder="https://drive.google.com/...">
+                                        </div>
+                                    </div>
+
                                     <button type="submit" class="btn btn-outline-primary btn-sm fw-semibold">
-                                        <i class="fas fa-upload me-1"></i> Unggah Surat Pemberitahuan
+                                        <i class="fas fa-upload me-1"></i> Simpan Surat Pemberitahuan
                                     </button>
                                 </form>
                             @endif
@@ -436,11 +466,18 @@
                                 <tbody>
                                     @foreach($pengawasanFiles as $pf)
                                     <tr>
-                                        <td class="ps-3"><i class="fas fa-file-pdf text-danger me-2"></i>{{ $pf->nama_dokumen }}</td>
-                                        <td class="small text-muted">{{ $pf->file_name ?? '-' }}</td>
+                                        <td class="ps-3">
+                                            <i class="{{ $pf->icon_class }} me-2"></i>{{ $pf->nama_dokumen }}
+                                            @if($pf->isLink())
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle ms-1" style="font-size: 0.7rem;"><i class="fab fa-google-drive me-1"></i>Drive</span>
+                                            @endif
+                                        </td>
+                                        <td class="small text-muted">{{ $pf->isLink() ? 'Tautan Google Drive' : ($pf->file_name ?? '-') }}</td>
                                         <td class="small text-muted">{{ $pf->created_at->format('d M Y H:i') }}</td>
                                         <td class="text-end pe-3">
-                                            <a href="{{ asset('storage/' . $pf->file_path) }}" target="_blank" class="btn btn-sm btn-light text-primary"><i class="fas fa-download"></i></a>
+                                            <a href="{{ $pf->url }}" target="_blank" class="btn btn-sm btn-light {{ $pf->isLink() ? 'text-success' : 'text-primary' }}" title="{{ $pf->isLink() ? 'Buka Link Google Drive' : 'Unduh File' }}">
+                                                <i class="{{ $pf->isLink() ? 'fas fa-external-link-alt' : 'fas fa-download' }}"></i>
+                                            </a>
                                             <button type="button" class="btn btn-sm btn-light text-danger" onclick="confirmDeleteFile('{{ route('timeline-tahapan-file.destroy', $pf->id) }}', '{{ $pf->nama_dokumen }}')"><i class="fas fa-trash"></i></button>
                                         </td>
                                     </tr>
@@ -547,11 +584,18 @@
                                 <tbody>
                                     @foreach($saranFiles as $sf)
                                     <tr>
-                                        <td class="ps-3"><i class="fas fa-file-pdf text-danger me-2"></i>{{ $sf->nama_dokumen }}</td>
-                                        <td class="small text-muted">{{ $sf->file_name ?? '-' }}</td>
+                                        <td class="ps-3">
+                                            <i class="{{ $sf->icon_class }} me-2"></i>{{ $sf->nama_dokumen }}
+                                            @if($sf->isLink())
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle ms-1" style="font-size: 0.7rem;"><i class="fab fa-google-drive me-1"></i>Drive</span>
+                                            @endif
+                                        </td>
+                                        <td class="small text-muted">{{ $sf->isLink() ? 'Tautan Google Drive' : ($sf->file_name ?? '-') }}</td>
                                         <td class="small text-muted">{{ $sf->created_at->format('d M Y H:i') }}</td>
                                         <td class="text-end pe-3">
-                                            <a href="{{ asset('storage/' . $sf->file_path) }}" target="_blank" class="btn btn-sm btn-light text-primary"><i class="fas fa-download"></i></a>
+                                            <a href="{{ $sf->url }}" target="_blank" class="btn btn-sm btn-light {{ $sf->isLink() ? 'text-success' : 'text-primary' }}" title="{{ $sf->isLink() ? 'Buka Link Google Drive' : 'Unduh File' }}">
+                                                <i class="{{ $sf->isLink() ? 'fas fa-external-link-alt' : 'fas fa-download' }}"></i>
+                                            </a>
                                             <button type="button" class="btn btn-sm btn-light text-danger" onclick="confirmDeleteFile('{{ route('timeline-tahapan-file.destroy', $sf->id) }}', '{{ $sf->nama_dokumen }}')"><i class="fas fa-trash"></i></button>
                                         </td>
                                     </tr>
@@ -638,11 +682,18 @@
                                 <tbody>
                                     @foreach($keteranganFiles as $kf)
                                     <tr>
-                                        <td class="ps-3"><i class="fas fa-file-pdf text-danger me-2"></i>{{ $kf->nama_dokumen }}</td>
-                                        <td class="small text-muted">{{ $kf->file_name ?? '-' }}</td>
+                                        <td class="ps-3">
+                                            <i class="{{ $kf->icon_class }} me-2"></i>{{ $kf->nama_dokumen }}
+                                            @if($kf->isLink())
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle ms-1" style="font-size: 0.7rem;"><i class="fab fa-google-drive me-1"></i>Drive</span>
+                                            @endif
+                                        </td>
+                                        <td class="small text-muted">{{ $kf->isLink() ? 'Tautan Google Drive' : ($kf->file_name ?? '-') }}</td>
                                         <td class="small text-muted">{{ $kf->created_at->format('d M Y H:i') }}</td>
                                         <td class="text-end pe-3">
-                                            <a href="{{ asset('storage/' . $kf->file_path) }}" target="_blank" class="btn btn-sm btn-light text-primary"><i class="fas fa-download"></i></a>
+                                            <a href="{{ $kf->url }}" target="_blank" class="btn btn-sm btn-light {{ $kf->isLink() ? 'text-success' : 'text-primary' }}" title="{{ $kf->isLink() ? 'Buka Link Google Drive' : 'Unduh File' }}">
+                                                <i class="{{ $kf->isLink() ? 'fas fa-external-link-alt' : 'fas fa-download' }}"></i>
+                                            </a>
                                             <button type="button" class="btn btn-sm btn-light text-danger" onclick="confirmDeleteFile('{{ route('timeline-tahapan-file.destroy', $kf->id) }}', '{{ $kf->nama_dokumen }}')"><i class="fas fa-trash"></i></button>
                                         </td>
                                     </tr>
@@ -715,21 +766,25 @@
                         <div class="border rounded-3 p-3 bg-white h-100 d-flex flex-column justify-content-between shadow-xs">
                             <div class="d-flex align-items-start justify-content-between mb-3">
                                 <div class="d-flex align-items-center gap-3">
-                                    <div class="rounded-3 bg-primary-subtle text-primary p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
-                                        <i class="fas fa-file-powerpoint fs-4"></i>
+                                    <div class="rounded-3 {{ $bahanPaparan && $bahanPaparan->isLink() ? 'bg-success-subtle text-success' : 'bg-primary-subtle text-primary' }} p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                        <i class="{{ $bahanPaparan ? $bahanPaparan->icon_class : 'fas fa-file-powerpoint' }} fs-4"></i>
                                     </div>
                                     <div>
                                         <h6 class="fw-bold text-dark mb-1">Bahan Paparan</h6>
                                         @if($bahanPaparan)
                                             <div class="small text-muted text-truncate" style="max-width: 260px;" title="{{ $bahanPaparan->file_name ?? $bahanPaparan->nama_dokumen }}">
-                                                <i class="fas fa-check-circle text-success me-1"></i>
+                                                @if($bahanPaparan->isLink())
+                                                    <span class="badge bg-success-subtle text-success border border-success-subtle me-1"><i class="fab fa-google-drive me-1"></i>Drive</span>
+                                                @else
+                                                    <i class="fas fa-check-circle text-success me-1"></i>
+                                                @endif
                                                 <span class="fw-semibold text-dark">{{ $bahanPaparan->file_name ?? $bahanPaparan->nama_dokumen }}</span>
-                                                @if($bahanPaparan->formatted_size)
+                                                @if($bahanPaparan->isFile() && $bahanPaparan->formatted_size)
                                                     <span class="text-secondary">({{ $bahanPaparan->formatted_size }})</span>
                                                 @endif
                                             </div>
                                             <div class="text-muted" style="font-size: 0.72rem;">
-                                                Diunggah {{ $bahanPaparan->created_at->format('d M Y H:i') }}
+                                                {{ $bahanPaparan->isLink() ? 'Tautan disimpan' : 'Diunggah' }} {{ $bahanPaparan->created_at->format('d M Y H:i') }}
                                             </div>
                                         @else
                                             <div class="small text-muted">Belum ada file</div>
@@ -738,8 +793,8 @@
                                 </div>
                                 @if($bahanPaparan)
                                     <div class="d-flex gap-1">
-                                        <a href="{{ asset('storage/' . $bahanPaparan->file_path) }}" target="_blank" class="btn btn-sm btn-outline-primary" title="Lihat/Unduh">
-                                            <i class="fas fa-eye"></i>
+                                        <a href="{{ $bahanPaparan->url }}" target="_blank" class="btn btn-sm {{ $bahanPaparan->isLink() ? 'btn-outline-success' : 'btn-outline-primary' }}" title="{{ $bahanPaparan->isLink() ? 'Buka Link Google Drive' : 'Lihat/Unduh File' }}">
+                                            <i class="{{ $bahanPaparan->isLink() ? 'fas fa-external-link-alt' : 'fas fa-eye' }}"></i>
                                         </a>
                                         <button type="button" class="btn btn-sm btn-outline-danger" title="Hapus Dokumen" onclick="confirmDeleteFile('{{ route('timeline-tahapan-file.destroy', $bahanPaparan->id) }}', 'Bahan Paparan')">
                                             <i class="fas fa-trash"></i>
@@ -749,7 +804,7 @@
                             </div>
                             <div class="border-top pt-2 mt-2">
                                 <button type="button" class="btn btn-light w-100 text-primary fw-semibold py-2 d-flex align-items-center justify-content-center gap-2 rounded-2" onclick="openUploadModal('supervisi', 'bahan_paparan', 'Bahan Paparan')">
-                                    <i class="fas fa-arrow-up-from-bracket"></i> {{ $bahanPaparan ? 'Ganti File' : 'Upload File' }}
+                                    <i class="fas fa-arrow-up-from-bracket"></i> {{ $bahanPaparan ? 'Ganti File / Link' : 'Upload File / Link Drive' }}
                                 </button>
                             </div>
                         </div>
@@ -760,21 +815,25 @@
                         <div class="border rounded-3 p-3 bg-white h-100 d-flex flex-column justify-content-between shadow-xs">
                             <div class="d-flex align-items-start justify-content-between mb-3">
                                 <div class="d-flex align-items-center gap-3">
-                                    <div class="rounded-3 bg-primary-subtle text-primary p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
-                                        <i class="fas fa-file-contract fs-4"></i>
+                                    <div class="rounded-3 {{ $permohonanSupervisi && $permohonanSupervisi->isLink() ? 'bg-success-subtle text-success' : 'bg-primary-subtle text-primary' }} p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                        <i class="{{ $permohonanSupervisi ? $permohonanSupervisi->icon_class : 'fas fa-file-contract' }} fs-4"></i>
                                     </div>
                                     <div>
                                         <h6 class="fw-bold text-dark mb-1">Permohonan Supervisi</h6>
                                         @if($permohonanSupervisi)
                                             <div class="small text-muted text-truncate" style="max-width: 260px;" title="{{ $permohonanSupervisi->file_name ?? $permohonanSupervisi->nama_dokumen }}">
-                                                <i class="fas fa-check-circle text-success me-1"></i>
+                                                @if($permohonanSupervisi->isLink())
+                                                    <span class="badge bg-success-subtle text-success border border-success-subtle me-1"><i class="fab fa-google-drive me-1"></i>Drive</span>
+                                                @else
+                                                    <i class="fas fa-check-circle text-success me-1"></i>
+                                                @endif
                                                 <span class="fw-semibold text-dark">{{ $permohonanSupervisi->file_name ?? $permohonanSupervisi->nama_dokumen }}</span>
-                                                @if($permohonanSupervisi->formatted_size)
+                                                @if($permohonanSupervisi->isFile() && $permohonanSupervisi->formatted_size)
                                                     <span class="text-secondary">({{ $permohonanSupervisi->formatted_size }})</span>
                                                 @endif
                                             </div>
                                             <div class="text-muted" style="font-size: 0.72rem;">
-                                                Diunggah {{ $permohonanSupervisi->created_at->format('d M Y H:i') }}
+                                                {{ $permohonanSupervisi->isLink() ? 'Tautan disimpan' : 'Diunggah' }} {{ $permohonanSupervisi->created_at->format('d M Y H:i') }}
                                             </div>
                                         @else
                                             <div class="small text-muted">Belum ada file</div>
@@ -783,8 +842,8 @@
                                 </div>
                                 @if($permohonanSupervisi)
                                     <div class="d-flex gap-1">
-                                        <a href="{{ asset('storage/' . $permohonanSupervisi->file_path) }}" target="_blank" class="btn btn-sm btn-outline-primary" title="Lihat/Unduh">
-                                            <i class="fas fa-eye"></i>
+                                        <a href="{{ $permohonanSupervisi->url }}" target="_blank" class="btn btn-sm {{ $permohonanSupervisi->isLink() ? 'btn-outline-success' : 'btn-outline-primary' }}" title="{{ $permohonanSupervisi->isLink() ? 'Buka Link Google Drive' : 'Lihat/Unduh File' }}">
+                                            <i class="{{ $permohonanSupervisi->isLink() ? 'fas fa-external-link-alt' : 'fas fa-eye' }}"></i>
                                         </a>
                                         <button type="button" class="btn btn-sm btn-outline-danger" title="Hapus Dokumen" onclick="confirmDeleteFile('{{ route('timeline-tahapan-file.destroy', $permohonanSupervisi->id) }}', 'Permohonan Supervisi')">
                                             <i class="fas fa-trash"></i>
@@ -794,7 +853,7 @@
                             </div>
                             <div class="border-top pt-2 mt-2">
                                 <button type="button" class="btn btn-light w-100 text-primary fw-semibold py-2 d-flex align-items-center justify-content-center gap-2 rounded-2" onclick="openUploadModal('supervisi', 'permohonan_supervisi', 'Permohonan Supervisi')">
-                                    <i class="fas fa-arrow-up-from-bracket"></i> {{ $permohonanSupervisi ? 'Ganti File' : 'Upload File' }}
+                                    <i class="fas fa-arrow-up-from-bracket"></i> {{ $permohonanSupervisi ? 'Ganti File / Link' : 'Upload File / Link Drive' }}
                                 </button>
                             </div>
                         </div>
@@ -940,13 +999,26 @@
                         @endphp
                         <div class="col">
                             @if($foto)
-                                <div class="position-relative rounded-3 border overflow-hidden shadow-xs bg-dark" style="height: 110px;">
-                                    <img src="{{ asset('storage/' . $foto->file_path) }}" alt="Foto {{ $s }}" class="w-100 h-100 object-fit-cover opacity-90" style="cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onclick="previewImage('{{ asset('storage/' . $foto->file_path) }}', 'Peta Spasial - Foto {{ $s }}')">
-                                    <span class="badge bg-dark bg-opacity-75 position-absolute top-0 start-0 m-1" style="font-size: 0.65rem;">Foto {{ $s }}</span>
+                                <div class="position-relative rounded-3 border overflow-hidden shadow-xs {{ $foto->isLink() ? 'bg-light' : 'bg-dark' }}" style="height: 110px;">
+                                    @if($foto->isLink())
+                                        <div class="w-100 h-100 d-flex flex-column align-items-center justify-content-center text-center p-2">
+                                            <i class="fab fa-google-drive text-success fs-3 mb-1"></i>
+                                            <div class="small fw-semibold text-truncate w-100 text-dark" style="font-size: 0.65rem;">Google Drive</div>
+                                        </div>
+                                    @else
+                                        <img src="{{ asset('storage/' . $foto->file_path) }}" alt="Foto {{ $s }}" class="w-100 h-100 object-fit-cover opacity-90" style="cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onclick="previewImage('{{ asset('storage/' . $foto->file_path) }}', 'Peta Spasial - Foto {{ $s }}')">
+                                    @endif
+                                    <span class="badge {{ $foto->isLink() ? 'bg-success' : 'bg-dark bg-opacity-75' }} position-absolute top-0 start-0 m-1" style="font-size: 0.65rem;">Foto {{ $s }}</span>
                                     <div class="position-absolute bottom-0 end-0 m-1 d-flex gap-1">
-                                        <button type="button" class="btn btn-light btn-xs p-1 rounded-circle shadow-sm" style="width: 22px; height: 22px; font-size: 0.65rem; line-height: 1;" title="Perbesar" onclick="previewImage('{{ asset('storage/' . $foto->file_path) }}', 'Peta Spasial - Foto {{ $s }}')">
-                                            <i class="fas fa-search-plus text-primary"></i>
-                                        </button>
+                                        @if($foto->isLink())
+                                            <a href="{{ $foto->link_drive }}" target="_blank" class="btn btn-light btn-xs p-1 rounded-circle shadow-sm" style="width: 22px; height: 22px; font-size: 0.65rem; line-height: 1;" title="Buka di Drive">
+                                                <i class="fas fa-external-link-alt text-success"></i>
+                                            </a>
+                                        @else
+                                            <button type="button" class="btn btn-light btn-xs p-1 rounded-circle shadow-sm" style="width: 22px; height: 22px; font-size: 0.65rem; line-height: 1;" title="Perbesar" onclick="previewImage('{{ asset('storage/' . $foto->file_path) }}', 'Peta Spasial - Foto {{ $s }}')">
+                                                <i class="fas fa-search-plus text-primary"></i>
+                                            </button>
+                                        @endif
                                         <button type="button" class="btn btn-danger btn-xs p-1 rounded-circle shadow-sm" style="width: 22px; height: 22px; font-size: 0.65rem; line-height: 1;" title="Hapus Foto" onclick="confirmDeleteFile('{{ route('timeline-tahapan-file.destroy', $foto->id) }}', 'Foto {{ $s }}')">
                                             <i class="fas fa-trash"></i>
                                         </button>
@@ -1000,14 +1072,17 @@
                                 @foreach($dokumenTambahans as $dt)
                                 <tr>
                                     <td class="ps-3 fw-semibold text-dark">
-                                        <i class="fas fa-file-pdf text-danger me-2"></i>{{ $dt->nama_dokumen }}
+                                        <i class="{{ $dt->icon_class }} me-2"></i>{{ $dt->nama_dokumen }}
+                                        @if($dt->isLink())
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle ms-1" style="font-size: 0.7rem;"><i class="fab fa-google-drive me-1"></i>Drive</span>
+                                        @endif
                                     </td>
-                                    <td class="small text-muted">{{ $dt->file_name ?? basename($dt->file_path) }}</td>
+                                    <td class="small text-muted">{{ $dt->isLink() ? 'Tautan Google Drive' : ($dt->file_name ?? basename($dt->file_path)) }}</td>
                                     <td class="small text-muted">{{ $dt->formatted_size ?: '-' }}</td>
                                     <td class="small text-muted">{{ $dt->created_at->format('d M Y H:i') }}</td>
                                     <td class="text-center">
-                                        <a href="{{ asset('storage/' . $dt->file_path) }}" target="_blank" class="btn btn-sm btn-light text-primary" title="Buka File">
-                                            <i class="fas fa-download"></i>
+                                        <a href="{{ $dt->url }}" target="_blank" class="btn btn-sm btn-light {{ $dt->isLink() ? 'text-success' : 'text-primary' }}" title="{{ $dt->isLink() ? 'Buka Link Google Drive' : 'Buka File' }}">
+                                            <i class="{{ $dt->isLink() ? 'fas fa-external-link-alt' : 'fas fa-download' }}"></i>
                                         </a>
                                         <button type="button" class="btn btn-sm btn-light text-danger" title="Hapus File" onclick="confirmDeleteFile('{{ route('timeline-tahapan-file.destroy', $dt->id) }}', '{{ $dt->nama_dokumen }}')">
                                             <i class="fas fa-trash"></i>
@@ -1303,19 +1378,50 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
+                    {{-- Pilihan Tipe: File atau Link Drive --}}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark small">Pilihan Sumber Dokumen <span class="text-danger">*</span></label>
+                        <div class="d-flex gap-3 p-2 bg-light rounded-3 border">
+                            <div class="form-check mb-0">
+                                <input class="form-check-input" type="radio" name="tipe" id="modalTipeFile" value="file" checked onchange="toggleModalUploadTipe('file')">
+                                <label class="form-check-label fw-semibold small text-dark" for="modalTipeFile">
+                                    <i class="fas fa-file-arrow-up text-primary me-1"></i> Unggah File
+                                </label>
+                            </div>
+                            <div class="form-check mb-0">
+                                <input class="form-check-input" type="radio" name="tipe" id="modalTipeLink" value="link" onchange="toggleModalUploadTipe('link')">
+                                <label class="form-check-label fw-semibold small text-dark" for="modalTipeLink">
+                                    <i class="fab fa-google-drive text-success me-1"></i> Link Google Drive
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="mb-3" id="wrapperNamaDokumen">
                         <label class="form-label fw-semibold text-dark">Nama Dokumen</label>
                         <input type="text" class="form-control" name="nama_dokumen" id="inputModalNamaDokumen" placeholder="Contoh: Bahan Paparan Supervisi">
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold text-dark">Pilih File</label>
+
+                    {{-- Form File --}}
+                    <div class="mb-3" id="wrapperModalFile">
+                        <label class="form-label fw-semibold text-dark">Pilih File <span class="text-danger">*</span></label>
                         <input type="file" class="form-control" name="file" required id="inputModalFile">
-                        <div class="form-text small">Format didukung: PDF, DOC, DOCX, JPG, PNG (Maks 20MB)</div>
+                        <div class="form-text small" id="textModalFileHelp">Format didukung: PDF, DOC, DOCX, JPG, PNG (Maks 50MB)</div>
+                    </div>
+
+                    {{-- Form Link Google Drive --}}
+                    <div class="mb-3" id="wrapperModalLink" style="display: none;">
+                        <label class="form-label fw-semibold text-dark">URL Link Google Drive <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white"><i class="fab fa-google-drive text-success"></i></span>
+                            <input type="url" class="form-control" name="link_drive" id="inputModalLinkDrive" placeholder="https://drive.google.com/file/d/... atau folder">
+                        </div>
+                        <div class="form-text small text-muted">Pastikan izin akses tautan Google Drive disetel "Siapa saja yang memiliki link" agar dapat dibuka.</div>
                     </div>
                 </div>
                 <div class="modal-footer border-top">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary fw-bold px-4">Unggah File</button>
+                    <button type="submit" class="btn btn-primary fw-bold px-4" id="btnModalUploadSubmit"><i class="fas fa-check me-1"></i> Simpan Dokumen</button>
                 </div>
             </form>
         </div>
@@ -1348,6 +1454,25 @@
                         </div>
                     </div>
 
+                    {{-- Pilihan Tipe: File atau Link GDrive --}}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark small">Pilihan Bentuk Berita Acara <span class="text-danger">*</span></label>
+                        <div class="d-flex gap-3 p-2 bg-white rounded-3 border">
+                            <div class="form-check mb-0">
+                                <input class="form-check-input" type="radio" name="tipe" id="modalBaTipeFile" value="file" checked onchange="toggleModalBaTipe('file')">
+                                <label class="form-check-label fw-semibold small text-dark" for="modalBaTipeFile">
+                                    <i class="fas fa-file-arrow-up text-primary me-1"></i> Unggah File Dokumen
+                                </label>
+                            </div>
+                            <div class="form-check mb-0">
+                                <input class="form-check-input" type="radio" name="tipe" id="modalBaTipeLink" value="link" onchange="toggleModalBaTipe('link')">
+                                <label class="form-check-label fw-semibold small text-dark" for="modalBaTipeLink">
+                                    <i class="fab fa-google-drive text-success me-1"></i> Link Google Drive
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label fw-bold text-dark small">Pilih Jenis Pengawasan / Berita Acara <span class="text-danger">*</span></label>
                         <select name="jenis_ba" id="selectJenisBa" class="form-select form-select-sm fw-semibold" required onchange="updateBaNomorPlaceholder(this.value)">
@@ -1376,10 +1501,21 @@
                         <input type="text" class="form-control form-control-sm" name="nama_dokumen" placeholder="Contoh: Scan BA Lapangan Hasil Pengawasan">
                     </div>
 
-                    <div class="mb-2">
+                    {{-- Form File BA --}}
+                    <div class="mb-2" id="wrapperModalBaFile">
                         <label class="form-label fw-bold text-dark small">Pilih File Dokumen BA <span class="text-danger">*</span></label>
-                        <input type="file" class="form-control form-control-sm" name="file" required accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
-                        <div class="form-text small" style="font-size: 0.72rem;">Format: PDF, DOCX, JPG, PNG (Maksimal 20MB)</div>
+                        <input type="file" class="form-control form-control-sm" name="file" id="inputModalBaFile" required accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                        <div class="form-text small" style="font-size: 0.72rem;">Format: PDF, DOCX, JPG, PNG (Maksimal 50MB)</div>
+                    </div>
+
+                    {{-- Form Link Google Drive BA --}}
+                    <div class="mb-2" id="wrapperModalBaLink" style="display: none;">
+                        <label class="form-label fw-bold text-dark small">Tautan Google Drive Dokumen BA <span class="text-danger">*</span></label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white"><i class="fab fa-google-drive text-success"></i></span>
+                            <input type="url" name="link_drive" id="inputModalBaLinkDrive" class="form-control" placeholder="https://drive.google.com/file/d/... atau folder">
+                        </div>
+                        <div class="form-text small text-muted" style="font-size: 0.72rem;">Pastikan izin akses tautan Google Drive disetel "Siapa saja yang memiliki link" agar dapat dibuka.</div>
                     </div>
                 </div>
                 <div class="modal-footer border-top bg-light">
@@ -1413,7 +1549,7 @@
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-dark">Pilih Foto (Dapat memilih lebih dari 1)</label>
                         <input type="file" class="form-control" name="files[]" multiple accept="image/*" required>
-                        <div class="form-text small">Format gambar: JPG, JPEG, PNG (Maks 8 foto, masing-masing maks 20MB)</div>
+                        <div class="form-text small">Format gambar: JPG, JPEG, PNG (Maks 8 foto, masing-masing maks 10MB)</div>
                     </div>
                 </div>
                 <div class="modal-footer border-top">
@@ -1636,6 +1772,9 @@
         $('#modalUploadKategori').val(kategori);
         $('#modalUploadSlot').val(slot);
         $('#inputModalFile').val('');
+        $('#inputModalLinkDrive').val('');
+        $('#modalTipeFile').prop('checked', true);
+        toggleModalUploadTipe('file');
         
         let title = 'Upload Dokumen';
         if (kategori === 'bahan_paparan') {
@@ -1660,10 +1799,59 @@
         $('#modalUpload').modal('show');
     }
 
+    // Toggle Tipe di Modal Upload
+    function toggleModalUploadTipe(type) {
+        if (type === 'link') {
+            $('#wrapperModalFile').hide();
+            $('#inputModalFile').prop('required', false).val('');
+            $('#wrapperModalLink').show();
+            $('#inputModalLinkDrive').prop('required', true);
+            $('#btnModalUploadSubmit').html('<i class="fab fa-google-drive me-1"></i> Simpan Link Drive');
+        } else {
+            $('#wrapperModalLink').hide();
+            $('#inputModalLinkDrive').prop('required', false).val('');
+            $('#wrapperModalFile').show();
+            $('#inputModalFile').prop('required', true);
+            $('#btnModalUploadSubmit').html('<i class="fas fa-upload me-1"></i> Unggah File');
+        }
+    }
+
+    // Toggle Tipe di Modal Upload BA
+    function toggleModalBaTipe(type) {
+        if (type === 'link') {
+            $('#wrapperModalBaFile').hide();
+            $('#inputModalBaFile').prop('required', false).val('');
+            $('#wrapperModalBaLink').show();
+            $('#inputModalBaLinkDrive').prop('required', true);
+        } else {
+            $('#wrapperModalBaLink').hide();
+            $('#inputModalBaLinkDrive').prop('required', false).val('');
+            $('#wrapperModalBaFile').show();
+            $('#inputModalBaFile').prop('required', true);
+        }
+    }
+
+    // Toggle Tipe di Surat Pemberitahuan
+    function togglePemberitahuanTipe(type) {
+        if (type === 'link') {
+            $('#wrapperPemberitahuanFile').hide();
+            $('#inputPemberitahuanFile').prop('required', false).val('');
+            $('#wrapperPemberitahuanLink').show();
+            $('#inputPemberitahuanLink').prop('required', true);
+        } else {
+            $('#wrapperPemberitahuanLink').hide();
+            $('#inputPemberitahuanLink').prop('required', false).val('');
+            $('#wrapperPemberitahuanFile').show();
+            $('#inputPemberitahuanFile').prop('required', true);
+        }
+    }
+
     // Helper Modal Khusus Upload BA Pengawasan
     function openUploadBaModal() {
         $('#inputNomorBa').val('');
         $('#selectJenisBa').val('prl');
+        $('#modalBaTipeFile').prop('checked', true);
+        toggleModalBaTipe('file');
         updateBaNomorPlaceholder('prl');
         $('#modalUploadBa').modal('show');
     }

@@ -23,7 +23,7 @@ class ProfilController extends Controller
             'email' => ['required', 'email', 'unique:users,email,'.$user->id],
             'no_hp' => ['nullable', 'string'],
             'jabatan' => ['nullable', 'string'],
-            'foto_profil' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
+            'foto_profil' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:' . config('upload.max_photo_size_kb')],
         ]);
 
         if ($request->hasFile('foto_profil')) {

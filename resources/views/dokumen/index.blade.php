@@ -69,23 +69,52 @@
                             <input type="email" name="email" class="form-control" required placeholder="Alamat email">
                         </div>
 
+                        {{-- Pilihan Bentuk: File atau Link Drive --}}
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold">Bentuk Dokumen <span class="text-danger">*</span></label>
+                            <div class="d-flex gap-3 p-2 bg-light rounded-3 border">
+                                <div class="form-check mb-0">
+                                    <input class="form-check-input" type="radio" name="tipe" id="tipeDokumenFile" value="file" checked onchange="toggleDokumenTipe('file')">
+                                    <label class="form-check-label fw-semibold small text-dark" for="tipeDokumenFile">
+                                        <i class="fas fa-file-upload text-primary me-1"></i> Unggah File Dokumen
+                                    </label>
+                                </div>
+                                <div class="form-check mb-0">
+                                    <input class="form-check-input" type="radio" name="tipe" id="tipeDokumenLink" value="link" onchange="toggleDokumenTipe('link')">
+                                    <label class="form-check-label fw-semibold small text-dark" for="tipeDokumenLink">
+                                        <i class="fab fa-google-drive text-success me-1"></i> Tautan / Link Google Drive
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
                         {{-- Dokumen Diunggah --}}
                         <div class="col-md-12">
                             <label class="form-label fw-semibold">Dokumen/Perizinan yang Diunggah <span class="text-danger">*</span></label>
-                            <textarea name="jenis_dokumen" class="form-control" rows="5" required placeholder="Tuliskan seluruh dokumen yang Anda lampirkan."></textarea>
+                            <textarea name="jenis_dokumen" class="form-control" rows="4" required placeholder="Tuliskan seluruh dokumen yang Anda lampirkan."></textarea>
                         </div>
 
                         {{-- File --}}
-                        <div class="col-md-12">
+                        <div class="col-md-12" id="wrapperDokumenFile">
                             <label class="form-label fw-semibold">File Dokumen <span class="text-danger">*</span></label>
-                            <input type="file" name="file" class="form-control" required>
-                            <div class="form-text">Format: PDF, JPG, PNG. Maksimal 100MB.</div>
+                            <input type="file" name="file" id="inputDokumenFile" class="form-control" required accept=".pdf,.jpg,.jpeg,.png">
+                            <div class="form-text">Format: PDF, JPG, PNG. Maksimal 50MB.</div>
+                        </div>
+
+                        {{-- Link Drive --}}
+                        <div class="col-md-12" id="wrapperDokumenLink" style="display: none;">
+                            <label class="form-label fw-semibold">URL Link Google Drive <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="fab fa-google-drive text-success"></i></span>
+                                <input type="url" name="link_drive" id="inputDokumenLink" class="form-control" placeholder="https://drive.google.com/file/d/... atau folder">
+                            </div>
+                            <div class="form-text text-muted">Pastikan izin tautan Google Drive disetel "Siapa saja yang memiliki link".</div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-upload me-1"></i> Upload</button>
+                    <button type="submit" class="btn btn-primary" id="btnDokumenSubmit"><i class="fas fa-upload me-1"></i> Unggah</button>
                 </div>
             </div>
         </form>
@@ -95,6 +124,22 @@
 @endsection
 @push('scripts')
 <script>
+function toggleDokumenTipe(type) {
+    if (type === 'link') {
+        $('#wrapperDokumenFile').hide();
+        $('#inputDokumenFile').prop('required', false).val('');
+        $('#wrapperDokumenLink').show();
+        $('#inputDokumenLink').prop('required', true);
+        $('#btnDokumenSubmit').html('<i class="fab fa-google-drive me-1"></i> Simpan Link Drive');
+    } else {
+        $('#wrapperDokumenLink').hide();
+        $('#inputDokumenLink').prop('required', false).val('');
+        $('#wrapperDokumenFile').show();
+        $('#inputDokumenFile').prop('required', true);
+        $('#btnDokumenSubmit').html('<i class="fas fa-upload me-1"></i> Unggah');
+    }
+}
+
 let table = $('#tabelDokumen').DataTable({
     processing: true, serverSide: true, responsive: true,
     ajax: "{{ route('dokumen.data') }}",
@@ -130,6 +175,8 @@ function hapusDokumen(id, isManual) {
 $('#modalDokumen').on('hidden.bs.modal', function () {
     $(this).find('form')[0].reset();
     $(this).find('.select2, .select2-tags').val('').trigger('change');
+    $('#tipeDokumenFile').prop('checked', true);
+    toggleDokumenTipe('file');
 });
 
 // Initialize select2 with tags for Pelaku Usaha

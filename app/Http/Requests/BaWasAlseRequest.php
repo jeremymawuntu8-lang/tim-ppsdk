@@ -80,8 +80,10 @@ class BaWasAlseRequest extends FormRequest
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'titik_koordinat' => ['nullable', 'string', 'max:255'],
-            'file_ba_pdf' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
-            'foto.*' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],
+            'file_ba_pdf' => ['nullable', 'file', 'mimes:pdf', 'max:' . config('upload.max_file_size_kb')],
+            'foto.*' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:' . config('upload.max_photo_size_kb')],
+            'files_arsip' => ['nullable', 'array'],
+            'files_arsip.*' => ['file', 'max:' . config('upload.max_file_size_kb')],
 
             // Saksi (array dinamis)
             'saksi' => ['nullable', 'array'],

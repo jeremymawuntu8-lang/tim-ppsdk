@@ -62,7 +62,9 @@ class BaReklamasiRequest extends FormRequest
             'pengawas.*.tanda_tangan' => ['nullable', 'string'],
             
             'foto' => ['nullable', 'array'],
-            'foto.*' => ['image', 'max:5120'], // max 5MB
+            'foto.*' => ['image', 'max:' . config('upload.max_photo_size_kb')], // max 10MB
+            'files_arsip' => ['nullable', 'array'],
+            'files_arsip.*' => ['file', 'max:' . config('upload.max_file_size_kb')],
             
             'ttd_pelaku_usaha' => ['nullable', 'string'],
             'ttd_pengawas_1' => ['nullable', 'string'],

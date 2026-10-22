@@ -36,14 +36,14 @@ class PengawasanTidakLangsungRequest extends FormRequest
             'kesesuaian.*.keterangan' => ['nullable', 'string'],
 
             // Validation for Images (File uploads)
-            'gambar_1' => ['nullable', 'file', 'image', 'max:5120'], // Pengamatan Lokasi berdasarkan Citra Google Earth
-            'gambar_2' => ['nullable', 'file', 'image', 'max:5120'], // Pengamatan Lokasi berdasarkan Citra Google Earth time series
-            'gambar_3' => ['nullable', 'file', 'image', 'max:5120'], // Overlay Basemap dengan Garis Pantai
-            'gambar_4' => ['nullable', 'file', 'image', 'max:5120'], // Menggunakan citra sentinel
-            'gambar_5' => ['nullable', 'file', 'image', 'max:5120'], // Delineasi area indikasi pelanggaran
-            'gambar_6' => ['nullable', 'file', 'image', 'max:5120'], // Overlay dengan peta sebaran ekosistem laut
-            'gambar_7' => ['nullable', 'file', 'image', 'max:5120'], // Overlay dengan RTR/RZWP-3-K
-            'gambar_8' => ['nullable', 'file', 'image', 'max:5120'], // Overlay dengan perizinan yang ada
+            'gambar_1' => ['nullable', 'file', 'image', 'max:' . config('upload.max_photo_size_kb')], // Pengamatan Lokasi berdasarkan Citra Google Earth
+            'gambar_2' => ['nullable', 'file', 'image', 'max:' . config('upload.max_photo_size_kb')], // Pengamatan Lokasi berdasarkan Citra Google Earth time series
+            'gambar_3' => ['nullable', 'file', 'image', 'max:' . config('upload.max_photo_size_kb')], // Overlay Basemap dengan Garis Pantai
+            'gambar_4' => ['nullable', 'file', 'image', 'max:' . config('upload.max_photo_size_kb')], // Menggunakan citra sentinel
+            'gambar_5' => ['nullable', 'file', 'image', 'max:' . config('upload.max_photo_size_kb')], // Delineasi area indikasi pelanggaran
+            'gambar_6' => ['nullable', 'file', 'image', 'max:' . config('upload.max_photo_size_kb')], // Overlay dengan peta sebaran ekosistem laut
+            'gambar_7' => ['nullable', 'file', 'image', 'max:' . config('upload.max_photo_size_kb')], // Overlay dengan RTR/RZWP-3-K
+            'gambar_8' => ['nullable', 'file', 'image', 'max:' . config('upload.max_photo_size_kb')], // Overlay dengan perizinan yang ada
         ];
     }
 }

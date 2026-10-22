@@ -93,7 +93,9 @@ class BaPencemaranRequest extends FormRequest
             'ttd_saksi_1' => ['nullable', 'string'],
             'ttd_saksi_2' => ['nullable', 'string'],
             'foto' => ['nullable', 'array'],
-            'foto.*' => ['image', 'max:5120'],
+            'foto.*' => ['image', 'max:' . config('upload.max_photo_size_kb')],
+            'files_arsip' => ['nullable', 'array'],
+            'files_arsip.*' => ['file', 'max:' . config('upload.max_file_size_kb')],
             'status' => ['required', 'string', 'in:draft,proses,selesai,tindak_lanjut'],
 
             // Tab 7 - Lampiran E

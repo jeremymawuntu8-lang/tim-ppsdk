@@ -37,7 +37,10 @@ class DokumenController extends Controller
                     'tanggal' => $doc->tanggal_upload ? Carbon::parse($doc->tanggal_upload)->format('d/m/Y') : '-',
                     'tanggal_raw' => $doc->tanggal_upload,
                     'is_manual' => true,
+                    'is_link' => $doc->isLink(),
+                    'link_drive' => $doc->link_drive,
                     'file_path' => $doc->path_file,
+                    'url' => $doc->url,
                 ];
             });
 
@@ -54,7 +57,10 @@ class DokumenController extends Controller
                     'tanggal' => $company->created_at ? $company->created_at->format('d/m/Y') : '-',
                     'tanggal_raw' => $company->created_at,
                     'is_manual' => false,
+                    'is_link' => false,
+                    'link_drive' => null,
                     'file_path' => $company->file_dokumen,
+                    'url' => asset('storage/' . $company->file_dokumen),
                 ];
             });
 
@@ -63,13 +69,17 @@ class DokumenController extends Controller
         return DataTables::of($allDocs)
             ->addIndexColumn()
             ->addColumn('aksi', function ($r) {
-                $viewUrl = asset('storage/' . $r['file_path']);
+                $viewUrl = $r['url'];
                 $downloadUrl = $r['is_manual'] ? route('dokumen.download', $r['id']) : route('dokumen.company.download', $r['id']);
                 $isManualFlag = $r['is_manual'] ? 'true' : 'false';
 
+                $downloadBtn = $r['is_link']
+                    ? '<a href="'.$viewUrl.'" target="_blank" class="btn btn-sm btn-outline-success" title="Buka Link Google Drive"><i class="fab fa-google-drive"></i></a>'
+                    : '<a href="'.$downloadUrl.'" class="btn btn-sm btn-outline-primary" title="Unduh"><i class="fas fa-download"></i></a>';
+
                 return '<div class="btn-group">
                     <a href="'.$viewUrl.'" target="_blank" class="btn btn-sm btn-outline-info" title="Lihat"><i class="fas fa-external-link-alt"></i></a>
-                    <a href="'.$downloadUrl.'" class="btn btn-sm btn-outline-primary" title="Unduh"><i class="fas fa-download"></i></a>
+                    '.$downloadBtn.'
                     <button type="button" onclick="hapusDokumen('.$r['id'].', '.$isManualFlag.')" class="btn btn-sm btn-danger" title="Hapus"><i class="fas fa-trash"></i></button>
                 </div>';
             })
@@ -79,15 +89,28 @@ class DokumenController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
+        $tipe = $request->input('tipe', 'file');
+        $linkDrive = trim((string) $request->input('link_drive'));
+        if ($linkDrive && !preg_match('~^(?:f|ht)tps?://~i', $linkDrive)) {
+            $linkDrive = 'https://' . $linkDrive;
+        }
+
+        $rules = [
             'pelaku_usaha_id' => ['required', 'string'],
             'nama_pic' => ['required', 'string'],
             'jabatan' => ['required', 'string'],
             'nomor_hp' => ['required', 'string'],
             'email' => ['required', 'email'],
             'jenis_dokumen' => ['required', 'string'],
-            'file' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:102400'],
-        ]);
+        ];
+
+        if ($tipe === 'link' || (!$request->hasFile('file') && !empty($linkDrive))) {
+            $rules['link_drive'] = ['required', 'url', 'max:2048'];
+        } else {
+            $rules['file'] = ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:' . config('upload.max_file_size_kb')];
+        }
+
+        $data = $request->validate($rules);
 
         $pelakuUsahaInput = $data['pelaku_usaha_id'];
         $pelakuUsaha = \App\Models\PelakuUsaha::find($pelakuUsahaInput);
@@ -107,23 +130,32 @@ class DokumenController extends Controller
         }
 
         $data['pelaku_usaha_id'] = $pelakuUsaha->id;
-
-        $file = $request->file('file');
-        $data['nama_file'] = $file->getClientOriginalName();
-        $data['path_file'] = $file->store('dokumen-pelaku-usaha', 'public');
         $data['tanggal_upload'] = now();
         $data['uploaded_by'] = auth()->id();
-        unset($data['file']);
+
+        if ($tipe === 'link' || (!$request->hasFile('file') && !empty($linkDrive))) {
+            $data['tipe'] = 'link';
+            $data['nama_file'] = 'Tautan Google Drive';
+            $data['path_file'] = null;
+            $data['link_drive'] = $linkDrive;
+        } else {
+            $file = $request->file('file');
+            $data['tipe'] = 'file';
+            $data['nama_file'] = $file->getClientOriginalName();
+            $data['path_file'] = $file->store('dokumen-pelaku-usaha', 'public');
+            $data['link_drive'] = null;
+            unset($data['file']);
+        }
 
         DokumenPelakuUsaha::create($data);
-        ActivityLog::catat('Upload', 'Dokumen', 'Mengunggah dokumen pelaku usaha');
+        ActivityLog::catat('Upload', 'Dokumen', 'Mengunggah dokumen/link pelaku usaha');
 
-        return redirect()->route('dokumen.index')->with('success', 'Dokumen berhasil diunggah.');
+        return redirect()->route('dokumen.index')->with('success', 'Dokumen / Tautan berhasil disimpan.');
     }
 
     public function destroy(DokumenPelakuUsaha $dokumen)
     {
-        if ($dokumen->path_file) {
+        if ($dokumen->path_file && Storage::disk('public')->exists($dokumen->path_file)) {
             Storage::disk('public')->delete($dokumen->path_file);
         }
         ActivityLog::catat('Hapus', 'Dokumen', 'Menghapus dokumen pelaku usaha');
@@ -134,6 +166,14 @@ class DokumenController extends Controller
 
     public function download(DokumenPelakuUsaha $dokumen)
     {
+        if ($dokumen->isLink()) {
+            return redirect()->away($dokumen->link_drive);
+        }
+
+        if (!$dokumen->path_file || !Storage::disk('public')->exists($dokumen->path_file)) {
+            abort(404, 'File dokumen tidak ditemukan di server.');
+        }
+
         ActivityLog::catat('Download', 'Dokumen', "Mengunduh dokumen: {$dokumen->nama_file}");
         return Storage::disk('public')->download($dokumen->path_file, $dokumen->nama_file);
     }

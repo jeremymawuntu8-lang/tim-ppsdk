@@ -18,6 +18,7 @@ use App\Observers\BaTimelineSyncObserver;
 use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
 
@@ -30,6 +31,15 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Format pesan max validation untuk file agar menampilkan ukuran MB yang ramah
+        Validator::replacer('max', function ($message, $attribute, $rule, $parameters) {
+            if (isset($parameters[0]) && is_numeric($parameters[0]) && (int)$parameters[0] >= 1024) {
+                $mb = round((int)$parameters[0] / 1024);
+                return str_replace([':max kilobytes', ':max'], ["{$mb} MB", "{$mb} MB"], $message);
+            }
+            return str_replace(':max', $parameters[0] ?? '', $message);
+        });
+
         Paginator::useBootstrapFive();
         Gate::policy(PelakuUsaha::class, PelakuUsahaPolicy::class);
         Gate::policy(BaWasPrl::class, BaWasPrlPolicy::class);

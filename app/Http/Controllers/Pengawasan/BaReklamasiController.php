@@ -50,7 +50,7 @@ class BaReklamasiController extends Controller
     {
         $data = $request->validated();
         $data['pelaku_usaha_id'] = $this->resolvePelakuUsahaId($data['pelaku_usaha_id'] ?? null, null, $data['lokasi_reklamasi'] ?? null);
-        unset($data['foto'], $data['pengawas']);
+        unset($data['foto'], $data['pengawas'], $data['files_arsip']);
 
         $data['ttd_pelaku_usaha'] = $this->simpanTandaTangan($data['ttd_pelaku_usaha'] ?? null);
         $data['ttd_pengawas_1'] = $this->simpanTandaTangan($data['ttd_pengawas_1'] ?? null);
@@ -95,7 +95,7 @@ class BaReklamasiController extends Controller
         $data = $request->validated();
         $oldPelakuUsahaId = $baReklamasi->pelaku_usaha_id;
         $data['pelaku_usaha_id'] = $this->resolvePelakuUsahaId($data['pelaku_usaha_id'] ?? null, null, $data['lokasi_reklamasi'] ?? null);
-        unset($data['foto'], $data['pengawas']);
+        unset($data['foto'], $data['pengawas'], $data['files_arsip']);
 
         $data['ttd_pelaku_usaha'] = $this->simpanTandaTangan($data['ttd_pelaku_usaha'] ?? null);
         $data['ttd_pengawas_1'] = $this->simpanTandaTangan($data['ttd_pengawas_1'] ?? null);

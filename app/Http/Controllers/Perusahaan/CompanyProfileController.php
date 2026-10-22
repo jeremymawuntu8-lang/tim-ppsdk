@@ -45,7 +45,7 @@ class CompanyProfileController extends Controller
             'nomor_telepon'            => ['required', 'string', 'max:30'],
             'dokumen_diunggah'         => ['required', 'string'],
             'keterangan_tambahan'      => ['nullable', 'string'],
-            'file_dokumen'             => ['required', 'file', 'mimes:pdf', 'max:1048576'], // max 1GB
+            'file_dokumen'             => ['required', 'file', 'mimes:pdf', 'max:' . config('upload.max_file_size_kb')], // max 50MB
         ]);
 
         if ($request->hasFile('file_dokumen')) {
@@ -121,7 +121,7 @@ class CompanyProfileController extends Controller
             'nomor_telepon'            => ['required', 'string', 'max:30'],
             'dokumen_diunggah'         => ['required', 'string'],
             'keterangan_tambahan'      => ['nullable', 'string'],
-            'file_dokumen'             => ['nullable', 'file', 'mimes:pdf', 'max:1048576'], // optional saat edit
+            'file_dokumen'             => ['nullable', 'file', 'mimes:pdf', 'max:' . config('upload.max_file_size_kb')], // optional saat edit
         ]);
 
         if ($request->hasFile('file_dokumen')) {

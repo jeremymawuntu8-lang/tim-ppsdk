@@ -221,7 +221,7 @@
                         <div class="upload-dropzone" id="dropzone">
                             <i class="fas fa-file-pdf"></i>
                             <h5 class="fw-bold text-dark mb-2">Tarik & Letakkan File PDF Baru di Sini (Opsional)</h5>
-                            <p class="text-muted small mb-3">klik untuk memilih file dari perangkat Anda (Maks. 1 GB)</p>
+                            <p class="text-muted small mb-3">klik untuk memilih file dari perangkat Anda (Maks. {{ round(config('upload.max_file_size_kb') / 1024) }} MB)</p>
                             
                             <input type="file" name="file_dokumen" id="file_dokumen" class="d-none" accept=".pdf">
                             <button type="button" class="btn btn-outline-primary rounded-pill px-4" onclick="document.getElementById('file_dokumen').click()">
@@ -298,8 +298,8 @@
                 return;
             }
             
-            if (file.size > 1073741824) {
-                alert('Ukuran file terlalu besar. Maksimal 1 GB.');
+            if (file.size > window.UPLOAD_MAX_BYTES) {
+                alert('Ukuran file terlalu besar. Maksimal {{ round(config('upload.max_file_size_kb') / 1024) }} MB.');
                 fileInput.val('');
                 fileNameDisplay.addClass('d-none');
                 return;

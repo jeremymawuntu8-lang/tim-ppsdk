@@ -163,7 +163,7 @@
                 <div class="mb-3">
                     <label class="form-label">Foto Lokasi Usaha</label>
                     <input type="file" name="foto_lokasi" class="form-control" accept="image/*">
-                    <div class="form-text">Format: JPG, PNG. Maks 2MB.</div>
+                    <div class="form-text">Format: JPG, PNG. Maks 10MB.</div>
                     @if(!empty($pelakuUsaha) && $pelakuUsaha->foto_lokasi)
                         <div class="mt-2 position-relative" style="width: 100px;">
                             <img src="{{ asset('storage/'.$pelakuUsaha->foto_lokasi) }}" class="img-thumbnail rounded shadow-sm" style="height:100px; width:100px; object-fit:cover;">

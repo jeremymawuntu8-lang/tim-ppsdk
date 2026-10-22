@@ -85,7 +85,7 @@
                             <div class="d-flex align-items-center gap-3">
                                 <div class="file-upload-wrapper w-100">
                                     <input type="file" name="foto_profil" class="form-control" accept="image/jpeg,image/png,image/jpg">
-                                    <div class="form-text">Format: JPG, JPEG, PNG. Maksimal 2MB. Resolusi kotak direkomendasikan.</div>
+                                    <div class="form-text">Format: JPG, JPEG, PNG. Maksimal 10MB. Resolusi kotak direkomendasikan.</div>
                                 </div>
                             </div>
                         </div>

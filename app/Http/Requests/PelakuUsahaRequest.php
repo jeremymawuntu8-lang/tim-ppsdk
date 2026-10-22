@@ -33,8 +33,8 @@ class PelakuUsahaRequest extends FormRequest
             'nomor_hp' => ['nullable', 'string', 'max:20'],
             'email' => ['nullable', 'email', 'max:255'],
             'status' => ['required', Rule::in(['aktif', 'tidak_aktif', 'dalam_proses', 'bermasalah'])],
-            'foto_lokasi' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],
-            'dokumen.*' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
+            'foto_lokasi' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:' . config('upload.max_photo_size_kb')],
+            'dokumen.*' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:' . config('upload.max_file_size_kb')],
             'jenis_dokumen.*' => ['nullable', 'string', 'max:100'],
         ];
     }

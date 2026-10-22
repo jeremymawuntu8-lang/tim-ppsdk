@@ -28,8 +28,10 @@ class BaWasPrlRequest extends FormRequest
             'status' => ['required', Rule::in(['draft', 'proses', 'selesai', 'tindak_lanjut'])],
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
-            'file_ba_pdf' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
-            'foto.*' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],
+            'file_ba_pdf' => ['nullable', 'file', 'mimes:pdf', 'max:' . config('upload.max_file_size_kb')],
+            'foto.*' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:' . config('upload.max_photo_size_kb')],
+            'files_arsip' => ['nullable', 'array'],
+            'files_arsip.*' => ['file', 'max:' . config('upload.max_file_size_kb')],
 
             // Pengawas yang Bertugas
             'no_surat_tugas' => ['nullable', 'string', 'max:255'],

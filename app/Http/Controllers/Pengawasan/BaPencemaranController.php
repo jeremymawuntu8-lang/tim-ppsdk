@@ -54,7 +54,7 @@ class BaPencemaranController extends Controller
         $data['pelaku_usaha_id'] = $this->resolvePelakuUsahaId($puInput, null, $data['alamat_kantor'] ?? null);
         
         $this->sanitizeBooleans($data);
-        unset($data['foto'], $data['pengawas']);
+        unset($data['foto'], $data['pengawas'], $data['files_arsip']);
 
         $data['ttd_pelaku_usaha'] = $this->simpanTandaTangan($data['ttd_pelaku_usaha'] ?? null);
         $data['ttd_pengawas_1'] = $this->simpanTandaTangan($data['ttd_pengawas_1'] ?? null);
@@ -102,7 +102,7 @@ class BaPencemaranController extends Controller
         $data['pelaku_usaha_id'] = $this->resolvePelakuUsahaId($puInput, null, $data['alamat_kantor'] ?? null);
         
         $this->sanitizeBooleans($data);
-        unset($data['foto'], $data['pengawas']);
+        unset($data['foto'], $data['pengawas'], $data['files_arsip']);
 
         $data['ttd_pelaku_usaha'] = $this->simpanTandaTangan($data['ttd_pelaku_usaha'] ?? null);
         $data['ttd_pengawas_1'] = $this->simpanTandaTangan($data['ttd_pengawas_1'] ?? null);

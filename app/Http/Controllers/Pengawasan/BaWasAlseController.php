@@ -52,7 +52,7 @@ class BaWasAlseController extends Controller
     {
         $data = $request->validated();
         $data['pelaku_usaha_id'] = $this->resolvePelakuUsahaId($data['pelaku_usaha_id'] ?? null, $data['provinsi_id'] ?? null, $data['alamat_kantor'] ?? $data['alamat_kegiatan'] ?? null);
-        unset($data['file_ba_pdf'], $data['foto'], $data['pengawas'], $data['saksi']);
+        unset($data['file_ba_pdf'], $data['foto'], $data['pengawas'], $data['saksi'], $data['files_arsip']);
 
         if ($request->hasFile('file_ba_pdf')) {
             $data['file_ba_pdf'] = $request->file('file_ba_pdf')->store('ba-was-alse', 'public');
@@ -111,7 +111,7 @@ class BaWasAlseController extends Controller
         $data = $request->validated();
         $oldPelakuUsahaId = $baWasAlse->pelaku_usaha_id;
         $data['pelaku_usaha_id'] = $this->resolvePelakuUsahaId($data['pelaku_usaha_id'] ?? null, $data['provinsi_id'] ?? null, $data['alamat_kantor'] ?? $data['alamat_kegiatan'] ?? null);
-        unset($data['file_ba_pdf'], $data['foto'], $data['pengawas'], $data['saksi']);
+        unset($data['file_ba_pdf'], $data['foto'], $data['pengawas'], $data['saksi'], $data['files_arsip']);
 
         if ($request->hasFile('file_ba_pdf')) {
             $data['file_ba_pdf'] = $request->file('file_ba_pdf')->store('ba-was-alse', 'public');

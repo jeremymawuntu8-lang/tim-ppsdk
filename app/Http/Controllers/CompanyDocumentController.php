@@ -18,24 +18,49 @@ class CompanyDocumentController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'judul' => 'required|string|max:255',
-            'keterangan' => 'nullable|string|max:1000',
-            'file' => 'required|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:5120'
-        ]);
+        $tipe = $request->input('tipe', 'file');
+        $linkDrive = trim((string) $request->input('link_drive'));
+        if ($linkDrive && !preg_match('~^(?:f|ht)tps?://~i', $linkDrive)) {
+            $linkDrive = 'https://' . $linkDrive;
+        }
 
         $company = auth()->user()->company;
-        
-        $file = $request->file('file');
-        $namaFile = time() . '_' . $file->getClientOriginalName();
-        $path = $file->storeAs('company_documents/' . $company->id, $namaFile, 'public');
 
-        $company->documents()->create([
-            'judul' => $request->judul,
-            'keterangan' => $request->keterangan,
-            'nama_file' => $namaFile,
-            'path_file' => $path
-        ]);
+        if ($tipe === 'link' || (!$request->hasFile('file') && !empty($linkDrive))) {
+            $request->validate([
+                'judul' => 'required|string|max:255',
+                'keterangan' => 'nullable|string|max:1000',
+                'link_drive' => 'required|url|max:2048',
+            ]);
+
+            $company->documents()->create([
+                'tipe' => 'link',
+                'judul' => $request->judul,
+                'keterangan' => $request->keterangan,
+                'nama_file' => 'Tautan Google Drive',
+                'path_file' => null,
+                'link_drive' => $linkDrive,
+            ]);
+        } else {
+            $request->validate([
+                'judul' => 'required|string|max:255',
+                'keterangan' => 'nullable|string|max:1000',
+                'file' => 'required|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:' . config('upload.max_file_size_kb')
+            ]);
+
+            $file = $request->file('file');
+            $namaFile = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('company_documents/' . $company->id, $namaFile, 'public');
+
+            $company->documents()->create([
+                'tipe' => 'file',
+                'judul' => $request->judul,
+                'keterangan' => $request->keterangan,
+                'nama_file' => $namaFile,
+                'path_file' => $path,
+                'link_drive' => null,
+            ]);
+        }
 
         ActivityLog::create([
             'user_id' => auth()->id(),
@@ -44,7 +69,7 @@ class CompanyDocumentController extends Controller
             'ip_address' => $request->ip()
         ]);
 
-        return back()->with('success', 'Dokumen berhasil diunggah.');
+        return back()->with('success', 'Dokumen / Tautan berhasil disimpan.');
     }
 
     public function download(CompanyDocument $document)
@@ -57,7 +82,11 @@ class CompanyDocumentController extends Controller
             }
         }
 
-        if (!Storage::disk('public')->exists($document->path_file)) {
+        if ($document->isLink()) {
+            return redirect()->away($document->link_drive);
+        }
+
+        if (!$document->path_file || !Storage::disk('public')->exists($document->path_file)) {
             abort(404, 'File fisik arsip tidak ditemukan di server.');
         }
 
@@ -71,7 +100,7 @@ class CompanyDocumentController extends Controller
             abort(403);
         }
 
-        if (Storage::disk('public')->exists($document->path_file)) {
+        if ($document->path_file && Storage::disk('public')->exists($document->path_file)) {
             Storage::disk('public')->delete($document->path_file);
         }
 

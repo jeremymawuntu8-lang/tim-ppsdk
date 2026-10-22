@@ -184,6 +184,7 @@
         }
     });
 </script>
+@include('partials.upload-size-guard')
 @stack('scripts')
 </body>
 </html>

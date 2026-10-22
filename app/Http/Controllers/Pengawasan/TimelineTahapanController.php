@@ -24,6 +24,11 @@ class TimelineTahapanController extends Controller
         $kategori = $request->input('kategori');
         $slot = $request->input('slot');
         $namaDokumen = $request->input('nama_dokumen');
+        $tipe = $request->input('tipe', 'file'); // 'file' atau 'link'
+        $linkDrive = trim((string) $request->input('link_drive'));
+        if ($linkDrive && !preg_match('~^(?:f|ht)tps?://~i', $linkDrive)) {
+            $linkDrive = 'https://' . $linkDrive;
+        }
 
         $tahapan = $pelakuUsaha->timelineTahapans()->firstOrCreate(
             ['tahap' => $tahap],
@@ -43,29 +48,42 @@ class TimelineTahapanController extends Controller
                     ->with('error', 'Berita Acara untuk pelaku usaha ini sudah tersinkron dari menu Pengawasan, tidak perlu diunggah lagi.');
             }
 
-            $request->validate([
-                'file' => 'required|file|max:20480',
-            ]);
+            $isLink = ($tipe === 'link' || (!$request->hasFile('file') && !empty($linkDrive)));
+
+            if ($isLink) {
+                $request->validate([
+                    'link_drive' => 'required|url|max:2048',
+                ]);
+                $path = null;
+                $originalName = 'Tautan Google Drive';
+                $fileSize = null;
+                $mimeType = null;
+            } else {
+                $request->validate([
+                    'file' => 'required|file|max:' . config('upload.max_file_size_kb'),
+                ]);
+                $file = $request->file('file');
+                $originalName = $file->getClientOriginalName();
+                $fileSize = $file->getSize();
+                $mimeType = $file->getMimeType();
+            }
 
             $jenisBa = strtolower((string) $request->input('jenis_ba', 'prl'));
             $nomorBaInput = trim((string) $request->input('nomor_ba'));
             $tanggalPengawasan = $request->input('tanggal_pengawasan') ?: now()->toDateString();
             $catatanBa = $request->input('catatan');
 
-            $file = $request->file('file');
-            $originalName = $file->getClientOriginalName();
-            $fileSize = $file->getSize();
-            $mimeType = $file->getMimeType();
-
-            $folder = match ($jenisBa) {
-                'prl' => 'ba-was-prl',
-                'alse' => 'ba-was-alse',
-                'reklamasi' => 'ba-reklamasi',
-                'ppk' => 'ba-ppk',
-                'pencemaran' => 'ba-pencemaran',
-                default => 'timeline_files/' . $pelakuUsaha->id,
-            };
-            $path = $file->store($folder, 'public');
+            if (!$isLink) {
+                $folder = match ($jenisBa) {
+                    'prl' => 'ba-was-prl',
+                    'alse' => 'ba-was-alse',
+                    'reklamasi' => 'ba-reklamasi',
+                    'ppk' => 'ba-ppk',
+                    'pencemaran' => 'ba-pencemaran',
+                    default => 'timeline_files/' . $pelakuUsaha->id,
+                };
+                $path = $file->store($folder, 'public');
+            }
 
             $prefix = match ($jenisBa) {
                 'prl' => 'BA-PRL-',
@@ -151,10 +169,11 @@ class TimelineTahapanController extends Controller
 
             if ($createdBa) {
                 $createdBa->arsipDokumen()->create([
-                    'tipe' => 'file',
+                    'tipe' => $isLink ? 'link' : 'file',
                     'judul' => $docTitle,
                     'path_file' => $path,
                     'nama_file' => $originalName,
+                    'link_gdrive' => $isLink ? $linkDrive : null,
                     'uploaded_by' => auth()->id(),
                     'keterangan' => 'Diunggah melalui Timeline Pengawasan',
                 ]);
@@ -163,8 +182,10 @@ class TimelineTahapanController extends Controller
             // Simpan juga ke timeline files
             $tahapan->files()->create([
                 'kategori' => 'ba_' . $jenisBa,
+                'tipe' => $isLink ? 'link' : 'file',
                 'nama_dokumen' => $docTitle,
                 'file_path' => $path,
+                'link_drive' => $isLink ? $linkDrive : null,
                 'file_name' => $originalName,
                 'file_size' => $fileSize,
                 'mime_type' => $mimeType,
@@ -195,10 +216,77 @@ class TimelineTahapanController extends Controller
                 ->with('success', "Dokumen {$labelBa} ({$nomorBa}) berhasil diunggah! Data otomatis tersimpan dan bertambah di sistem pengawasan {$labelBa}.");
         }
 
-        // 1. Upload File Tunggal untuk tahap lainnya
-        if ($request->hasFile('file')) {
+        // ==================== 1. Tipe Link Google Drive untuk Tahap Lainnya ====================
+        if ($tipe === 'link' || (!$request->hasFile('file') && !empty($linkDrive))) {
             $request->validate([
-                'file' => 'required|file|max:20480', // 20MB
+                'link_drive' => 'required|url|max:2048',
+            ]);
+
+            if ($kategori === 'bahan_paparan') {
+                $old = $tahapan->files()->where('kategori', 'bahan_paparan')->first();
+                if ($old) {
+                    if ($old->file_path && Storage::disk('public')->exists($old->file_path)) {
+                        Storage::disk('public')->delete($old->file_path);
+                    }
+                    $old->delete();
+                }
+                $tahapan->files()->create([
+                    'kategori' => 'bahan_paparan',
+                    'tipe' => 'link',
+                    'nama_dokumen' => $namaDokumen ?: 'Bahan Paparan (Google Drive)',
+                    'link_drive' => $linkDrive,
+                    'file_name' => 'Tautan Google Drive',
+                ]);
+            } elseif ($kategori === 'permohonan_supervisi') {
+                $old = $tahapan->files()->where('kategori', 'permohonan_supervisi')->first();
+                if ($old) {
+                    if ($old->file_path && Storage::disk('public')->exists($old->file_path)) {
+                        Storage::disk('public')->delete($old->file_path);
+                    }
+                    $old->delete();
+                }
+                $tahapan->files()->create([
+                    'kategori' => 'permohonan_supervisi',
+                    'tipe' => 'link',
+                    'nama_dokumen' => $namaDokumen ?: 'Permohonan Supervisi (Google Drive)',
+                    'link_drive' => $linkDrive,
+                    'file_name' => 'Tautan Google Drive',
+                ]);
+            } elseif ($kategori === 'peta_spasial') {
+                $slotNum = $slot ? (int) $slot : 1;
+                $old = $tahapan->files()->where('kategori', 'peta_spasial')->where('slot', $slotNum)->first();
+                if ($old) {
+                    if ($old->file_path && Storage::disk('public')->exists($old->file_path)) {
+                        Storage::disk('public')->delete($old->file_path);
+                    }
+                    $old->delete();
+                }
+                $tahapan->files()->create([
+                    'kategori' => 'peta_spasial',
+                    'slot' => $slotNum,
+                    'tipe' => 'link',
+                    'nama_dokumen' => $namaDokumen ?: ('Foto ' . $slotNum),
+                    'link_drive' => $linkDrive,
+                    'file_name' => 'Tautan Google Drive',
+                ]);
+            } else {
+                $tahapan->files()->create([
+                    'kategori' => $kategori ?: 'dokumen_tambahan',
+                    'tipe' => 'link',
+                    'nama_dokumen' => $namaDokumen ?: 'Dokumen (Google Drive)',
+                    'link_drive' => $linkDrive,
+                    'file_name' => 'Tautan Google Drive',
+                ]);
+            }
+        }
+        // ==================== 2. Upload File Tunggal untuk Tahap Lainnya ====================
+        elseif ($request->hasFile('file')) {
+            $maxKb = ($kategori === 'peta_spasial')
+                ? config('upload.max_photo_size_kb')
+                : config('upload.max_file_size_kb');
+
+            $request->validate([
+                'file' => 'required|file|max:' . $maxKb,
             ]);
 
             $file = $request->file('file');
@@ -209,12 +297,15 @@ class TimelineTahapanController extends Controller
             if ($kategori === 'bahan_paparan') {
                 $old = $tahapan->files()->where('kategori', 'bahan_paparan')->first();
                 if ($old) {
-                    Storage::disk('public')->delete($old->file_path);
+                    if ($old->file_path && Storage::disk('public')->exists($old->file_path)) {
+                        Storage::disk('public')->delete($old->file_path);
+                    }
                     $old->delete();
                 }
                 $path = $file->store('timeline_files/' . $pelakuUsaha->id, 'public');
                 $tahapan->files()->create([
                     'kategori' => 'bahan_paparan',
+                    'tipe' => 'file',
                     'nama_dokumen' => $namaDokumen ?: 'Bahan Paparan',
                     'file_path' => $path,
                     'file_name' => $originalName,
@@ -224,12 +315,15 @@ class TimelineTahapanController extends Controller
             } elseif ($kategori === 'permohonan_supervisi') {
                 $old = $tahapan->files()->where('kategori', 'permohonan_supervisi')->first();
                 if ($old) {
-                    Storage::disk('public')->delete($old->file_path);
+                    if ($old->file_path && Storage::disk('public')->exists($old->file_path)) {
+                        Storage::disk('public')->delete($old->file_path);
+                    }
                     $old->delete();
                 }
                 $path = $file->store('timeline_files/' . $pelakuUsaha->id, 'public');
                 $tahapan->files()->create([
                     'kategori' => 'permohonan_supervisi',
+                    'tipe' => 'file',
                     'nama_dokumen' => $namaDokumen ?: 'Permohonan Supervisi',
                     'file_path' => $path,
                     'file_name' => $originalName,
@@ -240,13 +334,16 @@ class TimelineTahapanController extends Controller
                 $slotNum = $slot ? (int) $slot : 1;
                 $old = $tahapan->files()->where('kategori', 'peta_spasial')->where('slot', $slotNum)->first();
                 if ($old) {
-                    Storage::disk('public')->delete($old->file_path);
+                    if ($old->file_path && Storage::disk('public')->exists($old->file_path)) {
+                        Storage::disk('public')->delete($old->file_path);
+                    }
                     $old->delete();
                 }
                 $path = $file->store('timeline_files/' . $pelakuUsaha->id . '/peta_spasial', 'public');
                 $tahapan->files()->create([
                     'kategori' => 'peta_spasial',
                     'slot' => $slotNum,
+                    'tipe' => 'file',
                     'nama_dokumen' => $namaDokumen ?: ('Foto ' . $slotNum),
                     'file_path' => $path,
                     'file_name' => $originalName,
@@ -257,6 +354,7 @@ class TimelineTahapanController extends Controller
                 $path = $file->store('timeline_files/' . $pelakuUsaha->id, 'public');
                 $tahapan->files()->create([
                     'kategori' => $kategori ?: 'dokumen_tambahan',
+                    'tipe' => 'file',
                     'nama_dokumen' => $namaDokumen ?: $originalName,
                     'file_path' => $path,
                     'file_name' => $originalName,
@@ -266,10 +364,10 @@ class TimelineTahapanController extends Controller
             }
         }
 
-        // 2. Upload Banyak Foto (Bulk Peta Spasial)
+        // ==================== 3. Upload Banyak Foto (Bulk Peta Spasial) ====================
         if ($request->hasFile('files')) {
             $request->validate([
-                'files.*' => 'file|max:20480',
+                'files.*' => 'file|max:' . config('upload.max_photo_size_kb'),
             ]);
 
             if ($kategori === 'peta_spasial') {
@@ -286,6 +384,7 @@ class TimelineTahapanController extends Controller
                     $tahapan->files()->create([
                         'kategori' => 'peta_spasial',
                         'slot' => $targetSlot,
+                        'tipe' => 'file',
                         'nama_dokumen' => 'Foto ' . $targetSlot,
                         'file_path' => $path,
                         'file_name' => $f->getClientOriginalName(),
@@ -302,11 +401,11 @@ class TimelineTahapanController extends Controller
                 'tanggal' => now(),
             ]);
             return redirect()->route('timeline-pengawasan.show', ['pelakuUsaha' => $pelakuUsaha->id, 'tab' => $tahap])
-                ->with('success', 'Dokumen berhasil diunggah dan tahap ' . ucfirst($tahap) . ' ditandai selesai.');
+                ->with('success', 'Dokumen/Link berhasil disimpan dan tahap ' . ucfirst($tahap) . ' ditandai selesai.');
         }
 
         return redirect()->route('timeline-pengawasan.show', ['pelakuUsaha' => $pelakuUsaha->id, 'tab' => $tahap])
-            ->with('success', 'Dokumen berhasil diunggah.');
+            ->with('success', 'Dokumen/Tautan Google Drive berhasil disimpan.');
     }
 
     public function selesaikanSupervisi(Request $request, PelakuUsaha $pelakuUsaha)

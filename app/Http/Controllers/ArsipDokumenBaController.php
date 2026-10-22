@@ -130,9 +130,9 @@ class ArsipDokumenBaController extends Controller
             'tipe'           => ['required', 'in:file,link'],
             'judul'          => ['nullable', 'string', 'max:255'],
             'keterangan'     => ['nullable', 'string', 'max:1000'],
-            'file_arsip'     => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx,zip,rar', 'max:102400'],
+            'file_arsip'     => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx,zip,rar', 'max:' . config('upload.max_file_size_kb')],
             'files_arsip'    => ['nullable', 'array'],
-            'files_arsip.*'  => ['file', 'mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx,zip,rar', 'max:102400'],
+            'files_arsip.*'  => ['file', 'mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx,zip,rar', 'max:' . config('upload.max_file_size_kb')],
             'link_gdrive'    => ['required_if:tipe,link', 'nullable', 'string', 'max:2048'],
         ]);
 

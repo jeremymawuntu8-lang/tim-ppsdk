@@ -266,7 +266,7 @@
                             <div class="p-3 border rounded-3 bg-light">
                                 <label class="form-label fw-semibold">Pilih Berkas Dokumen <span class="text-danger">*</span></label>
                                 <input type="file" name="files_arsip[]" id="inputFileArsip" class="form-control" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.zip,.rar">
-                                <div class="form-text text-muted">Bisa memilih beberapa berkas sekaligus (PDF, Word, Excel, Gambar scan, ZIP). Maks 100MB/file.</div>
+                                <div class="form-text text-muted">Bisa memilih beberapa berkas sekaligus (PDF, Word, Excel, Gambar scan, ZIP). Maks 50MB/file.</div>
                             </div>
                         </div>
 
