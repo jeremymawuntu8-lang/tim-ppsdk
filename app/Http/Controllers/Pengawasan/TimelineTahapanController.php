@@ -23,12 +23,18 @@ class TimelineTahapanController extends Controller
 {
     /**
      * Memastikan kolom-kolom baru pada tabel timeline_tahapan_files sudah tersedia
-     * (mengatasi situasi jika migrasi belum sempat dijalankan di server production).
+     * dan file_path nullable (mengatasi situasi jika migrasi belum sempat dijalankan di server production).
      */
     protected function ensureTimelineTablesUpToDate(): void
     {
         try {
             if (Schema::hasTable('timeline_tahapan_files')) {
+                try {
+                    \Illuminate\Support\Facades\DB::statement("ALTER TABLE timeline_tahapan_files MODIFY file_path VARCHAR(255) NULL DEFAULT NULL");
+                } catch (\Throwable $e) {
+                    // Abaikan jika alter gagal
+                }
+
                 Schema::table('timeline_tahapan_files', function ($table) {
                     if (!Schema::hasColumn('timeline_tahapan_files', 'kategori')) {
                         $table->string('kategori')->nullable();
@@ -55,6 +61,26 @@ class TimelineTahapanController extends Controller
             }
         } catch (\Throwable $e) {
             Log::warning('Auto migration check failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Menyimpan file tahapan dengan proteksi fallback jika kolom file_path di database
+     * masih berstatus NOT NULL tanpa default value (SQL error 1364/1048).
+     */
+    protected function createTahapanFile(TimelineTahapan $tahapan, array $data): TimelineTahapanFile
+    {
+        try {
+            return $tahapan->files()->create($data);
+        } catch (\Illuminate\Database\QueryException $e) {
+            $errorCode = $e->errorInfo[1] ?? 0;
+            // 1364: Field doesn't have a default value
+            // 1048: Column cannot be null
+            if (in_array($errorCode, [1364, 1048])) {
+                $data['file_path'] = $data['file_path'] ?? ($data['link_drive'] ?? '');
+                return $tahapan->files()->create($data);
+            }
+            throw $e;
         }
     }
 
@@ -224,7 +250,7 @@ class TimelineTahapanController extends Controller
                 }
 
                 // Simpan juga ke timeline files
-                $tahapan->files()->create([
+                $this->createTahapanFile($tahapan, [
                     'kategori' => 'ba_' . $jenisBa,
                     'tipe' => $isLink ? 'link' : 'file',
                     'nama_dokumen' => $docTitle,
@@ -274,10 +300,11 @@ class TimelineTahapanController extends Controller
                         }
                         $old->delete();
                     }
-                    $tahapan->files()->create([
+                    $this->createTahapanFile($tahapan, [
                         'kategori' => 'bahan_paparan',
                         'tipe' => 'link',
                         'nama_dokumen' => $namaDokumen ?: 'Bahan Paparan (Google Drive)',
+                        'file_path' => null,
                         'link_drive' => $linkDrive,
                         'file_name' => 'Tautan Google Drive',
                     ]);
@@ -289,10 +316,11 @@ class TimelineTahapanController extends Controller
                         }
                         $old->delete();
                     }
-                    $tahapan->files()->create([
+                    $this->createTahapanFile($tahapan, [
                         'kategori' => 'permohonan_supervisi',
                         'tipe' => 'link',
                         'nama_dokumen' => $namaDokumen ?: 'Permohonan Supervisi (Google Drive)',
+                        'file_path' => null,
                         'link_drive' => $linkDrive,
                         'file_name' => 'Tautan Google Drive',
                     ]);
@@ -305,19 +333,21 @@ class TimelineTahapanController extends Controller
                         }
                         $old->delete();
                     }
-                    $tahapan->files()->create([
+                    $this->createTahapanFile($tahapan, [
                         'kategori' => 'peta_spasial',
                         'slot' => $slotNum,
                         'tipe' => 'link',
                         'nama_dokumen' => $namaDokumen ?: ('Foto ' . $slotNum),
+                        'file_path' => null,
                         'link_drive' => $linkDrive,
                         'file_name' => 'Tautan Google Drive',
                     ]);
                 } else {
-                    $tahapan->files()->create([
+                    $this->createTahapanFile($tahapan, [
                         'kategori' => $kategori ?: 'dokumen_tambahan',
                         'tipe' => 'link',
                         'nama_dokumen' => $namaDokumen ?: 'Dokumen (Google Drive)',
+                        'file_path' => null,
                         'link_drive' => $linkDrive,
                         'file_name' => 'Tautan Google Drive',
                     ]);
@@ -356,7 +386,7 @@ class TimelineTahapanController extends Controller
                         }
                         $old->delete();
                     }
-                    $tahapan->files()->create([
+                    $this->createTahapanFile($tahapan, [
                         'kategori' => 'bahan_paparan',
                         'tipe' => 'file',
                         'nama_dokumen' => $namaDokumen ?: 'Bahan Paparan',
@@ -373,7 +403,7 @@ class TimelineTahapanController extends Controller
                         }
                         $old->delete();
                     }
-                    $tahapan->files()->create([
+                    $this->createTahapanFile($tahapan, [
                         'kategori' => 'permohonan_supervisi',
                         'tipe' => 'file',
                         'nama_dokumen' => $namaDokumen ?: 'Permohonan Supervisi',
@@ -391,7 +421,7 @@ class TimelineTahapanController extends Controller
                         }
                         $old->delete();
                     }
-                    $tahapan->files()->create([
+                    $this->createTahapanFile($tahapan, [
                         'kategori' => 'peta_spasial',
                         'slot' => $slotNum,
                         'tipe' => 'file',
@@ -402,7 +432,7 @@ class TimelineTahapanController extends Controller
                         'mime_type' => $mimeType,
                     ]);
                 } else {
-                    $tahapan->files()->create([
+                    $this->createTahapanFile($tahapan, [
                         'kategori' => $kategori ?: 'dokumen_tambahan',
                         'tipe' => 'file',
                         'nama_dokumen' => $namaDokumen ?: $originalName,
@@ -432,7 +462,7 @@ class TimelineTahapanController extends Controller
                         }
                         $targetSlot = array_shift($availableSlots);
                         $path = $f->store('timeline_files/' . $pelakuUsaha->id . '/peta_spasial', 'public');
-                        $tahapan->files()->create([
+                        $this->createTahapanFile($tahapan, [
                             'kategori' => 'peta_spasial',
                             'slot' => $targetSlot,
                             'tipe' => 'file',
