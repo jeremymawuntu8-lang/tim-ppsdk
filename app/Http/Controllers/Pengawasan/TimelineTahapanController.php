@@ -70,6 +70,10 @@ class TimelineTahapanController extends Controller
      */
     protected function createTahapanFile(TimelineTahapan $tahapan, array $data): TimelineTahapanFile
     {
+        if (empty($data['file_path'])) {
+            $data['file_path'] = $data['link_drive'] ?? '';
+        }
+
         try {
             return $tahapan->files()->create($data);
         } catch (\Illuminate\Database\QueryException $e) {
@@ -77,7 +81,7 @@ class TimelineTahapanController extends Controller
             // 1364: Field doesn't have a default value
             // 1048: Column cannot be null
             if (in_array($errorCode, [1364, 1048])) {
-                $data['file_path'] = $data['file_path'] ?? ($data['link_drive'] ?? '');
+                $data['file_path'] = $data['link_drive'] ?? '-';
                 return $tahapan->files()->create($data);
             }
             throw $e;
@@ -304,7 +308,7 @@ class TimelineTahapanController extends Controller
                         'kategori' => 'bahan_paparan',
                         'tipe' => 'link',
                         'nama_dokumen' => $namaDokumen ?: 'Bahan Paparan (Google Drive)',
-                        'file_path' => null,
+                        'file_path' => $linkDrive ?: '',
                         'link_drive' => $linkDrive,
                         'file_name' => 'Tautan Google Drive',
                     ]);
@@ -320,7 +324,7 @@ class TimelineTahapanController extends Controller
                         'kategori' => 'permohonan_supervisi',
                         'tipe' => 'link',
                         'nama_dokumen' => $namaDokumen ?: 'Permohonan Supervisi (Google Drive)',
-                        'file_path' => null,
+                        'file_path' => $linkDrive ?: '',
                         'link_drive' => $linkDrive,
                         'file_name' => 'Tautan Google Drive',
                     ]);
@@ -338,7 +342,7 @@ class TimelineTahapanController extends Controller
                         'slot' => $slotNum,
                         'tipe' => 'link',
                         'nama_dokumen' => $namaDokumen ?: ('Foto ' . $slotNum),
-                        'file_path' => null,
+                        'file_path' => $linkDrive ?: '',
                         'link_drive' => $linkDrive,
                         'file_name' => 'Tautan Google Drive',
                     ]);
@@ -347,7 +351,7 @@ class TimelineTahapanController extends Controller
                         'kategori' => $kategori ?: 'dokumen_tambahan',
                         'tipe' => 'link',
                         'nama_dokumen' => $namaDokumen ?: 'Dokumen (Google Drive)',
-                        'file_path' => null,
+                        'file_path' => $linkDrive ?: '',
                         'link_drive' => $linkDrive,
                         'file_name' => 'Tautan Google Drive',
                     ]);
