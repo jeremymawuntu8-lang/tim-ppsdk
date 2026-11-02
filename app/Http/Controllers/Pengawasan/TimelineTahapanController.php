@@ -22,49 +22,6 @@ use Illuminate\Validation\ValidationException;
 class TimelineTahapanController extends Controller
 {
     /**
-     * Memastikan kolom-kolom baru pada tabel timeline_tahapan_files sudah tersedia
-     * dan file_path nullable (mengatasi situasi jika migrasi belum sempat dijalankan di server production).
-     */
-    protected function ensureTimelineTablesUpToDate(): void
-    {
-        try {
-            if (Schema::hasTable('timeline_tahapan_files')) {
-                try {
-                    \Illuminate\Support\Facades\DB::statement("ALTER TABLE timeline_tahapan_files MODIFY file_path VARCHAR(255) NULL DEFAULT NULL");
-                } catch (\Throwable $e) {
-                    // Abaikan jika alter gagal
-                }
-
-                Schema::table('timeline_tahapan_files', function ($table) {
-                    if (!Schema::hasColumn('timeline_tahapan_files', 'kategori')) {
-                        $table->string('kategori')->nullable();
-                    }
-                    if (!Schema::hasColumn('timeline_tahapan_files', 'slot')) {
-                        $table->unsignedTinyInteger('slot')->nullable();
-                    }
-                    if (!Schema::hasColumn('timeline_tahapan_files', 'tipe')) {
-                        $table->string('tipe', 20)->default('file')->nullable();
-                    }
-                    if (!Schema::hasColumn('timeline_tahapan_files', 'link_drive')) {
-                        $table->text('link_drive')->nullable();
-                    }
-                    if (!Schema::hasColumn('timeline_tahapan_files', 'file_name')) {
-                        $table->string('file_name')->nullable();
-                    }
-                    if (!Schema::hasColumn('timeline_tahapan_files', 'file_size')) {
-                        $table->unsignedBigInteger('file_size')->nullable();
-                    }
-                    if (!Schema::hasColumn('timeline_tahapan_files', 'mime_type')) {
-                        $table->string('mime_type')->nullable();
-                    }
-                });
-            }
-        } catch (\Throwable $e) {
-            Log::warning('Auto migration check failed: ' . $e->getMessage());
-        }
-    }
-
-    /**
      * Menyimpan file tahapan dengan proteksi fallback jika kolom file_path di database
      * masih berstatus NOT NULL tanpa default value (SQL error 1364/1048).
      */
@@ -90,8 +47,6 @@ class TimelineTahapanController extends Controller
 
     public function upload(Request $request, PelakuUsaha $pelakuUsaha)
     {
-        $this->ensureTimelineTablesUpToDate();
-
         $tahap = $request->input('tahap', 'supervisi');
         $kategori = $request->input('kategori');
         $slot = $request->input('slot');
