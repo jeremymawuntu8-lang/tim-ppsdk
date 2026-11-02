@@ -13,13 +13,55 @@ use App\Models\PelakuUsaha;
 use App\Models\TimelineTahapan;
 use App\Models\TimelineTahapanFile;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class TimelineTahapanController extends Controller
 {
+    /**
+     * Memastikan kolom-kolom baru pada tabel timeline_tahapan_files sudah tersedia
+     * (mengatasi situasi jika migrasi belum sempat dijalankan di server production).
+     */
+    protected function ensureTimelineTablesUpToDate(): void
+    {
+        try {
+            if (Schema::hasTable('timeline_tahapan_files')) {
+                Schema::table('timeline_tahapan_files', function ($table) {
+                    if (!Schema::hasColumn('timeline_tahapan_files', 'kategori')) {
+                        $table->string('kategori')->nullable();
+                    }
+                    if (!Schema::hasColumn('timeline_tahapan_files', 'slot')) {
+                        $table->unsignedTinyInteger('slot')->nullable();
+                    }
+                    if (!Schema::hasColumn('timeline_tahapan_files', 'tipe')) {
+                        $table->string('tipe', 20)->default('file')->nullable();
+                    }
+                    if (!Schema::hasColumn('timeline_tahapan_files', 'link_drive')) {
+                        $table->text('link_drive')->nullable();
+                    }
+                    if (!Schema::hasColumn('timeline_tahapan_files', 'file_name')) {
+                        $table->string('file_name')->nullable();
+                    }
+                    if (!Schema::hasColumn('timeline_tahapan_files', 'file_size')) {
+                        $table->unsignedBigInteger('file_size')->nullable();
+                    }
+                    if (!Schema::hasColumn('timeline_tahapan_files', 'mime_type')) {
+                        $table->string('mime_type')->nullable();
+                    }
+                });
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Auto migration check failed: ' . $e->getMessage());
+        }
+    }
+
     public function upload(Request $request, PelakuUsaha $pelakuUsaha)
     {
+        $this->ensureTimelineTablesUpToDate();
+
         $tahap = $request->input('tahap', 'supervisi');
         $kategori = $request->input('kategori');
         $slot = $request->input('slot');
@@ -30,382 +72,404 @@ class TimelineTahapanController extends Controller
             $linkDrive = 'https://' . $linkDrive;
         }
 
-        $tahapan = $pelakuUsaha->timelineTahapans()->firstOrCreate(
-            ['tahap' => $tahap],
-            ['status' => 'proses']
-        );
-        if ($tahapan->status === 'belum') {
-            $tahapan->update(['status' => 'proses']);
-        }
-
-        // ==================== KHUSUS TAHAP PENGAWASAN: SINKRONISASI KE MODEL BA ====================
-        if ($tahap === 'pengawasan') {
-            $sudahAdaBa = collect(\App\Services\TimelinePengawasanService::BA_TYPES)
-                ->keys()
-                ->contains(fn ($rel) => $pelakuUsaha->{$rel}()->exists());
-            if ($sudahAdaBa) {
-                return redirect()->route('timeline-pengawasan.show', ['pelakuUsaha' => $pelakuUsaha->id, 'tab' => 'pengawasan'])
-                    ->with('error', 'Berita Acara untuk pelaku usaha ini sudah tersinkron dari menu Pengawasan, tidak perlu diunggah lagi.');
+        try {
+            $tahapan = $pelakuUsaha->timelineTahapans()->firstOrCreate(
+                ['tahap' => $tahap],
+                ['status' => 'proses']
+            );
+            if ($tahapan->status === 'belum') {
+                $tahapan->update(['status' => 'proses']);
             }
 
-            $isLink = ($tipe === 'link' || (!$request->hasFile('file') && !empty($linkDrive)));
+            // ==================== KHUSUS TAHAP PENGAWASAN: SINKRONISASI KE MODEL BA ====================
+            if ($tahap === 'pengawasan') {
+                $sudahAdaBa = collect(\App\Services\TimelinePengawasanService::BA_TYPES)
+                    ->keys()
+                    ->contains(fn ($rel) => $pelakuUsaha->{$rel}()->exists());
+                if ($sudahAdaBa) {
+                    return redirect()->route('timeline-pengawasan.show', ['pelakuUsaha' => $pelakuUsaha->id, 'tab' => 'pengawasan'])
+                        ->with('error', 'Berita Acara untuk pelaku usaha ini sudah tersinkron dari menu Pengawasan, tidak perlu diunggah lagi.');
+                }
 
-            if ($isLink) {
+                $isLink = ($tipe === 'link' || (!$request->hasFile('file') && !empty($linkDrive)));
+
+                if ($isLink) {
+                    $request->validate([
+                        'link_drive' => 'required|url|max:2048',
+                    ]);
+                    $path = null;
+                    $originalName = 'Tautan Google Drive';
+                    $fileSize = null;
+                    $mimeType = null;
+                } else {
+                    $maxKb = (int) (config('upload.max_file_size_kb', 51200) ?: 51200);
+                    $request->validate([
+                        'file' => 'required|file|max:' . $maxKb,
+                    ]);
+                    $file = $request->file('file');
+                    $originalName = $file->getClientOriginalName();
+                    $fileSize = $file->getSize();
+                    $mimeType = $file->getMimeType();
+                }
+
+                $jenisBa = strtolower((string) $request->input('jenis_ba', 'prl'));
+                $nomorBaInput = trim((string) $request->input('nomor_ba'));
+                $tanggalPengawasan = $request->input('tanggal_pengawasan') ?: now()->toDateString();
+                $catatanBa = $request->input('catatan');
+
+                if (!$isLink) {
+                    $folder = match ($jenisBa) {
+                        'prl' => 'ba-was-prl',
+                        'alse' => 'ba-was-alse',
+                        'reklamasi' => 'ba-reklamasi',
+                        'ppk' => 'ba-ppk',
+                        'pencemaran' => 'ba-pencemaran',
+                        default => 'timeline_files/' . $pelakuUsaha->id,
+                    };
+                    $path = $file->store($folder, 'public');
+                }
+
+                $prefix = match ($jenisBa) {
+                    'prl' => 'BA-PRL-',
+                    'alse' => 'BA-ALSE-',
+                    'reklamasi' => 'BA-REK-',
+                    'ppk' => 'BA-PPK-',
+                    'pencemaran' => 'BA-PCM-',
+                    default => 'BA-',
+                };
+
+                $nomorBa = $nomorBaInput ?: ($prefix . date('Ymd') . '-' . strtoupper(Str::random(5)));
+                $labelBa = match ($jenisBa) {
+                    'prl' => 'BA WAS PRL',
+                    'alse' => 'BA WAS ALSE',
+                    'reklamasi' => 'BA Reklamasi',
+                    'ppk' => 'BA PPK',
+                    'pencemaran' => 'BA Pencemaran',
+                    default => 'Berita Acara Pengawasan',
+                };
+
+                $docTitle = $namaDokumen ?: "{$labelBa} ({$nomorBa})";
+
+                // Simpan ke record BA terkait di database sistem utama
+                $createdBa = null;
+                if ($jenisBa === 'prl') {
+                    $createdBa = BaWasPrl::create([
+                        'pelaku_usaha_id' => $pelakuUsaha->id,
+                        'nomor_ba' => $nomorBa,
+                        'tanggal_pengawasan' => $tanggalPengawasan,
+                        'nomor_pkkprl' => $pelakuUsaha->nomor_pkkprl,
+                        'lokasi' => $pelakuUsaha->alamat ?: ($pelakuUsaha->kabupaten?->nama ?? '-'),
+                        'provinsi_id' => $pelakuUsaha->provinsi_id,
+                        'status' => 'tindak_lanjut',
+                        'file_ba_pdf' => $path,
+                        'created_by' => auth()->id(),
+                        'hasil_pengawasan' => $catatanBa ?: 'Dokumen BA diunggah melalui Timeline Pengawasan',
+                        'kesimpulan' => 'Dokumen Berita Acara terunggah dan tercatat melalui Timeline Pengawasan.',
+                    ]);
+                } elseif ($jenisBa === 'alse') {
+                    $createdBa = BaWasAlse::create([
+                        'pelaku_usaha_id' => $pelakuUsaha->id,
+                        'nomor_ba' => $nomorBa,
+                        'tanggal_pengawasan' => $tanggalPengawasan,
+                        'nomor_pkkprl' => $pelakuUsaha->nomor_pkkprl,
+                        'provinsi_id' => $pelakuUsaha->provinsi_id,
+                        'status' => 'tindak_lanjut',
+                        'file_ba_pdf' => $path,
+                        'created_by' => auth()->id(),
+                        'hasil_pengawasan' => $catatanBa ?: 'Dokumen BA diunggah melalui Timeline Pengawasan',
+                        'kesimpulan' => 'Dokumen Berita Acara terunggah dan tercatat melalui Timeline Pengawasan.',
+                    ]);
+                } elseif ($jenisBa === 'reklamasi') {
+                    $createdBa = BaReklamasi::create([
+                        'pelaku_usaha_id' => $pelakuUsaha->id,
+                        'nomor_ba' => $nomorBa,
+                        'tanggal_pengawasan' => $tanggalPengawasan,
+                        'status' => 'tindak_lanjut',
+                        'file_ba_pdf' => $path,
+                        'created_by' => auth()->id(),
+                        'lokasi_reklamasi' => $pelakuUsaha->alamat ?: ($pelakuUsaha->kabupaten?->nama ?? '-'),
+                    ]);
+                } elseif ($jenisBa === 'ppk') {
+                    $createdBa = BaPpk::create([
+                        'pelaku_usaha_id' => $pelakuUsaha->id,
+                        'nomor_ba' => $nomorBa,
+                        'tanggal_pengawasan' => $tanggalPengawasan,
+                        'status' => 'tindak_lanjut',
+                        'file_ba_pdf' => $path,
+                        'created_by' => auth()->id(),
+                        'lokasi' => $pelakuUsaha->alamat ?: ($pelakuUsaha->kabupaten?->nama ?? '-'),
+                    ]);
+                } elseif ($jenisBa === 'pencemaran') {
+                    $createdBa = BaPencemaran::create([
+                        'pelaku_usaha_id' => $pelakuUsaha->id,
+                        'nomor_ba' => $nomorBa,
+                        'tanggal_pengawasan' => $tanggalPengawasan,
+                        'status' => 'tindak_lanjut',
+                        'file_ba_pdf' => $path,
+                        'created_by' => auth()->id(),
+                        'lokasi' => $pelakuUsaha->alamat ?: ($pelakuUsaha->kabupaten?->nama ?? '-'),
+                    ]);
+                }
+
+                if ($createdBa) {
+                    $createdBa->arsipDokumen()->create([
+                        'tipe' => $isLink ? 'link' : 'file',
+                        'judul' => $docTitle,
+                        'path_file' => $path,
+                        'nama_file' => $originalName,
+                        'link_gdrive' => $isLink ? $linkDrive : null,
+                        'uploaded_by' => auth()->id(),
+                        'keterangan' => 'Diunggah melalui Timeline Pengawasan',
+                    ]);
+                }
+
+                // Simpan juga ke timeline files
+                $tahapan->files()->create([
+                    'kategori' => 'ba_' . $jenisBa,
+                    'tipe' => $isLink ? 'link' : 'file',
+                    'nama_dokumen' => $docTitle,
+                    'file_path' => $path,
+                    'link_drive' => $isLink ? $linkDrive : null,
+                    'file_name' => $originalName,
+                    'file_size' => $fileSize,
+                    'mime_type' => $mimeType,
+                ]);
+
+                // Selesaikan tahap pemberitahuan jika belum
+                $pemberitahuan = $pelakuUsaha->timelineTahapans()->where('tahap', 'pemberitahuan')->first();
+                if (!$pemberitahuan || $pemberitahuan->status === 'belum') {
+                    $pelakuUsaha->timelineTahapans()->updateOrCreate(
+                        ['tahap' => 'pemberitahuan'],
+                        [
+                            'status' => 'selesai',
+                            'tanggal' => $tanggalPengawasan,
+                            'catatan' => "Selesai otomatis (BA diunggah: {$nomorBa})",
+                        ]
+                    );
+                }
+
+                $tahapan->update([
+                    'status' => 'proses',
+                    'tanggal' => $tanggalPengawasan,
+                    'catatan' => "Telah diunggah {$labelBa}: {$nomorBa}",
+                ]);
+
+                ActivityLog::catat('Upload', 'Timeline Pengawasan', "Mengunggah {$labelBa} ({$nomorBa}) untuk {$pelakuUsaha->nama_perusahaan}");
+
+                return redirect()->route('timeline-pengawasan.show', ['pelakuUsaha' => $pelakuUsaha->id, 'tab' => 'pengawasan'])
+                    ->with('success', "Dokumen {$labelBa} ({$nomorBa}) berhasil diunggah! Data otomatis tersimpan dan bertambah di sistem pengawasan {$labelBa}.");
+            }
+
+            // ==================== 1. Tipe Link Google Drive untuk Tahap Lainnya ====================
+            if ($tipe === 'link' || (!$request->hasFile('file') && !empty($linkDrive))) {
                 $request->validate([
                     'link_drive' => 'required|url|max:2048',
                 ]);
-                $path = null;
-                $originalName = 'Tautan Google Drive';
-                $fileSize = null;
-                $mimeType = null;
-            } else {
+
+                if ($kategori === 'bahan_paparan') {
+                    $old = $tahapan->files()->where('kategori', 'bahan_paparan')->first();
+                    if ($old) {
+                        if ($old->file_path && Storage::disk('public')->exists($old->file_path)) {
+                            Storage::disk('public')->delete($old->file_path);
+                        }
+                        $old->delete();
+                    }
+                    $tahapan->files()->create([
+                        'kategori' => 'bahan_paparan',
+                        'tipe' => 'link',
+                        'nama_dokumen' => $namaDokumen ?: 'Bahan Paparan (Google Drive)',
+                        'link_drive' => $linkDrive,
+                        'file_name' => 'Tautan Google Drive',
+                    ]);
+                } elseif ($kategori === 'permohonan_supervisi') {
+                    $old = $tahapan->files()->where('kategori', 'permohonan_supervisi')->first();
+                    if ($old) {
+                        if ($old->file_path && Storage::disk('public')->exists($old->file_path)) {
+                            Storage::disk('public')->delete($old->file_path);
+                        }
+                        $old->delete();
+                    }
+                    $tahapan->files()->create([
+                        'kategori' => 'permohonan_supervisi',
+                        'tipe' => 'link',
+                        'nama_dokumen' => $namaDokumen ?: 'Permohonan Supervisi (Google Drive)',
+                        'link_drive' => $linkDrive,
+                        'file_name' => 'Tautan Google Drive',
+                    ]);
+                } elseif ($kategori === 'peta_spasial') {
+                    $slotNum = $slot ? (int) $slot : 1;
+                    $old = $tahapan->files()->where('kategori', 'peta_spasial')->where('slot', $slotNum)->first();
+                    if ($old) {
+                        if ($old->file_path && Storage::disk('public')->exists($old->file_path)) {
+                            Storage::disk('public')->delete($old->file_path);
+                        }
+                        $old->delete();
+                    }
+                    $tahapan->files()->create([
+                        'kategori' => 'peta_spasial',
+                        'slot' => $slotNum,
+                        'tipe' => 'link',
+                        'nama_dokumen' => $namaDokumen ?: ('Foto ' . $slotNum),
+                        'link_drive' => $linkDrive,
+                        'file_name' => 'Tautan Google Drive',
+                    ]);
+                } else {
+                    $tahapan->files()->create([
+                        'kategori' => $kategori ?: 'dokumen_tambahan',
+                        'tipe' => 'link',
+                        'nama_dokumen' => $namaDokumen ?: 'Dokumen (Google Drive)',
+                        'link_drive' => $linkDrive,
+                        'file_name' => 'Tautan Google Drive',
+                    ]);
+                }
+            }
+            // ==================== 2. Upload File Tunggal untuk Tahap Lainnya ====================
+            elseif ($request->hasFile('file') || $tipe === 'file') {
+                $maxKb = ($kategori === 'peta_spasial')
+                    ? (int) (config('upload.max_photo_size_kb', 10240) ?: 10240)
+                    : (int) (config('upload.max_file_size_kb', 51200) ?: 51200);
+
                 $request->validate([
-                    'file' => 'required|file|max:' . config('upload.max_file_size_kb'),
+                    'file' => 'required|file|max:' . $maxKb,
                 ]);
+
                 $file = $request->file('file');
                 $originalName = $file->getClientOriginalName();
                 $fileSize = $file->getSize();
                 $mimeType = $file->getMimeType();
-            }
 
-            $jenisBa = strtolower((string) $request->input('jenis_ba', 'prl'));
-            $nomorBaInput = trim((string) $request->input('nomor_ba'));
-            $tanggalPengawasan = $request->input('tanggal_pengawasan') ?: now()->toDateString();
-            $catatanBa = $request->input('catatan');
+                $folder = 'timeline_files/' . $pelakuUsaha->id;
+                if ($kategori === 'peta_spasial') {
+                    $folder .= '/peta_spasial';
+                }
 
-            if (!$isLink) {
-                $folder = match ($jenisBa) {
-                    'prl' => 'ba-was-prl',
-                    'alse' => 'ba-was-alse',
-                    'reklamasi' => 'ba-reklamasi',
-                    'ppk' => 'ba-ppk',
-                    'pencemaran' => 'ba-pencemaran',
-                    default => 'timeline_files/' . $pelakuUsaha->id,
-                };
                 $path = $file->store($folder, 'public');
-            }
-
-            $prefix = match ($jenisBa) {
-                'prl' => 'BA-PRL-',
-                'alse' => 'BA-ALSE-',
-                'reklamasi' => 'BA-REK-',
-                'ppk' => 'BA-PPK-',
-                'pencemaran' => 'BA-PCM-',
-                default => 'BA-',
-            };
-
-            $nomorBa = $nomorBaInput ?: ($prefix . date('Ymd') . '-' . strtoupper(Str::random(5)));
-            $labelBa = match ($jenisBa) {
-                'prl' => 'BA WAS PRL',
-                'alse' => 'BA WAS ALSE',
-                'reklamasi' => 'BA Reklamasi',
-                'ppk' => 'BA PPK',
-                'pencemaran' => 'BA Pencemaran',
-                default => 'Berita Acara Pengawasan',
-            };
-
-            $docTitle = $namaDokumen ?: "{$labelBa} ({$nomorBa})";
-
-            // Simpan ke record BA terkait di database sistem utama
-            $createdBa = null;
-            if ($jenisBa === 'prl') {
-                $createdBa = BaWasPrl::create([
-                    'pelaku_usaha_id' => $pelakuUsaha->id,
-                    'nomor_ba' => $nomorBa,
-                    'tanggal_pengawasan' => $tanggalPengawasan,
-                    'nomor_pkkprl' => $pelakuUsaha->nomor_pkkprl,
-                    'lokasi' => $pelakuUsaha->alamat ?: ($pelakuUsaha->kabupaten?->nama ?? '-'),
-                    'provinsi_id' => $pelakuUsaha->provinsi_id,
-                    'status' => 'tindak_lanjut',
-                    'file_ba_pdf' => $path,
-                    'created_by' => auth()->id(),
-                    'hasil_pengawasan' => $catatanBa ?: 'Dokumen BA diunggah melalui Timeline Pengawasan',
-                    'kesimpulan' => 'Dokumen Berita Acara terunggah dan tercatat melalui Timeline Pengawasan.',
-                ]);
-            } elseif ($jenisBa === 'alse') {
-                $createdBa = BaWasAlse::create([
-                    'pelaku_usaha_id' => $pelakuUsaha->id,
-                    'nomor_ba' => $nomorBa,
-                    'tanggal_pengawasan' => $tanggalPengawasan,
-                    'nomor_pkkprl' => $pelakuUsaha->nomor_pkkprl,
-                    'provinsi_id' => $pelakuUsaha->provinsi_id,
-                    'status' => 'tindak_lanjut',
-                    'file_ba_pdf' => $path,
-                    'created_by' => auth()->id(),
-                    'hasil_pengawasan' => $catatanBa ?: 'Dokumen BA diunggah melalui Timeline Pengawasan',
-                    'kesimpulan' => 'Dokumen Berita Acara terunggah dan tercatat melalui Timeline Pengawasan.',
-                ]);
-            } elseif ($jenisBa === 'reklamasi') {
-                $createdBa = BaReklamasi::create([
-                    'pelaku_usaha_id' => $pelakuUsaha->id,
-                    'nomor_ba' => $nomorBa,
-                    'tanggal_pengawasan' => $tanggalPengawasan,
-                    'status' => 'tindak_lanjut',
-                    'file_ba_pdf' => $path,
-                    'created_by' => auth()->id(),
-                    'lokasi_reklamasi' => $pelakuUsaha->alamat ?: ($pelakuUsaha->kabupaten?->nama ?? '-'),
-                ]);
-            } elseif ($jenisBa === 'ppk') {
-                $createdBa = BaPpk::create([
-                    'pelaku_usaha_id' => $pelakuUsaha->id,
-                    'nomor_ba' => $nomorBa,
-                    'tanggal_pengawasan' => $tanggalPengawasan,
-                    'status' => 'tindak_lanjut',
-                    'file_ba_pdf' => $path,
-                    'created_by' => auth()->id(),
-                    'lokasi' => $pelakuUsaha->alamat ?: ($pelakuUsaha->kabupaten?->nama ?? '-'),
-                ]);
-            } elseif ($jenisBa === 'pencemaran') {
-                $createdBa = BaPencemaran::create([
-                    'pelaku_usaha_id' => $pelakuUsaha->id,
-                    'nomor_ba' => $nomorBa,
-                    'tanggal_pengawasan' => $tanggalPengawasan,
-                    'status' => 'tindak_lanjut',
-                    'file_ba_pdf' => $path,
-                    'created_by' => auth()->id(),
-                    'lokasi' => $pelakuUsaha->alamat ?: ($pelakuUsaha->kabupaten?->nama ?? '-'),
-                ]);
-            }
-
-            if ($createdBa) {
-                $createdBa->arsipDokumen()->create([
-                    'tipe' => $isLink ? 'link' : 'file',
-                    'judul' => $docTitle,
-                    'path_file' => $path,
-                    'nama_file' => $originalName,
-                    'link_gdrive' => $isLink ? $linkDrive : null,
-                    'uploaded_by' => auth()->id(),
-                    'keterangan' => 'Diunggah melalui Timeline Pengawasan',
-                ]);
-            }
-
-            // Simpan juga ke timeline files
-            $tahapan->files()->create([
-                'kategori' => 'ba_' . $jenisBa,
-                'tipe' => $isLink ? 'link' : 'file',
-                'nama_dokumen' => $docTitle,
-                'file_path' => $path,
-                'link_drive' => $isLink ? $linkDrive : null,
-                'file_name' => $originalName,
-                'file_size' => $fileSize,
-                'mime_type' => $mimeType,
-            ]);
-
-            // Selesaikan tahap pemberitahuan jika belum
-            $pemberitahuan = $pelakuUsaha->timelineTahapans()->where('tahap', 'pemberitahuan')->first();
-            if (!$pemberitahuan || $pemberitahuan->status === 'belum') {
-                $pelakuUsaha->timelineTahapans()->updateOrCreate(
-                    ['tahap' => 'pemberitahuan'],
-                    [
-                        'status' => 'selesai',
-                        'tanggal' => $tanggalPengawasan,
-                        'catatan' => "Selesai otomatis (BA diunggah: {$nomorBa})",
-                    ]
-                );
-            }
-
-            $tahapan->update([
-                'status' => 'proses',
-                'tanggal' => $tanggalPengawasan,
-                'catatan' => "Telah diunggah {$labelBa}: {$nomorBa}",
-            ]);
-
-            ActivityLog::catat('Upload', 'Timeline Pengawasan', "Mengunggah {$labelBa} ({$nomorBa}) untuk {$pelakuUsaha->nama_perusahaan}");
-
-            return redirect()->route('timeline-pengawasan.show', ['pelakuUsaha' => $pelakuUsaha->id, 'tab' => 'pengawasan'])
-                ->with('success', "Dokumen {$labelBa} ({$nomorBa}) berhasil diunggah! Data otomatis tersimpan dan bertambah di sistem pengawasan {$labelBa}.");
-        }
-
-        // ==================== 1. Tipe Link Google Drive untuk Tahap Lainnya ====================
-        if ($tipe === 'link' || (!$request->hasFile('file') && !empty($linkDrive))) {
-            $request->validate([
-                'link_drive' => 'required|url|max:2048',
-            ]);
-
-            if ($kategori === 'bahan_paparan') {
-                $old = $tahapan->files()->where('kategori', 'bahan_paparan')->first();
-                if ($old) {
-                    if ($old->file_path && Storage::disk('public')->exists($old->file_path)) {
-                        Storage::disk('public')->delete($old->file_path);
-                    }
-                    $old->delete();
+                if (!$path) {
+                    throw new \Exception('Gagal menyimpan file ke penyimpanan server.');
                 }
-                $tahapan->files()->create([
-                    'kategori' => 'bahan_paparan',
-                    'tipe' => 'link',
-                    'nama_dokumen' => $namaDokumen ?: 'Bahan Paparan (Google Drive)',
-                    'link_drive' => $linkDrive,
-                    'file_name' => 'Tautan Google Drive',
-                ]);
-            } elseif ($kategori === 'permohonan_supervisi') {
-                $old = $tahapan->files()->where('kategori', 'permohonan_supervisi')->first();
-                if ($old) {
-                    if ($old->file_path && Storage::disk('public')->exists($old->file_path)) {
-                        Storage::disk('public')->delete($old->file_path);
-                    }
-                    $old->delete();
-                }
-                $tahapan->files()->create([
-                    'kategori' => 'permohonan_supervisi',
-                    'tipe' => 'link',
-                    'nama_dokumen' => $namaDokumen ?: 'Permohonan Supervisi (Google Drive)',
-                    'link_drive' => $linkDrive,
-                    'file_name' => 'Tautan Google Drive',
-                ]);
-            } elseif ($kategori === 'peta_spasial') {
-                $slotNum = $slot ? (int) $slot : 1;
-                $old = $tahapan->files()->where('kategori', 'peta_spasial')->where('slot', $slotNum)->first();
-                if ($old) {
-                    if ($old->file_path && Storage::disk('public')->exists($old->file_path)) {
-                        Storage::disk('public')->delete($old->file_path);
-                    }
-                    $old->delete();
-                }
-                $tahapan->files()->create([
-                    'kategori' => 'peta_spasial',
-                    'slot' => $slotNum,
-                    'tipe' => 'link',
-                    'nama_dokumen' => $namaDokumen ?: ('Foto ' . $slotNum),
-                    'link_drive' => $linkDrive,
-                    'file_name' => 'Tautan Google Drive',
-                ]);
-            } else {
-                $tahapan->files()->create([
-                    'kategori' => $kategori ?: 'dokumen_tambahan',
-                    'tipe' => 'link',
-                    'nama_dokumen' => $namaDokumen ?: 'Dokumen (Google Drive)',
-                    'link_drive' => $linkDrive,
-                    'file_name' => 'Tautan Google Drive',
-                ]);
-            }
-        }
-        // ==================== 2. Upload File Tunggal untuk Tahap Lainnya ====================
-        elseif ($request->hasFile('file')) {
-            $maxKb = ($kategori === 'peta_spasial')
-                ? config('upload.max_photo_size_kb')
-                : config('upload.max_file_size_kb');
 
-            $request->validate([
-                'file' => 'required|file|max:' . $maxKb,
-            ]);
-
-            $file = $request->file('file');
-            $originalName = $file->getClientOriginalName();
-            $fileSize = $file->getSize();
-            $mimeType = $file->getMimeType();
-
-            if ($kategori === 'bahan_paparan') {
-                $old = $tahapan->files()->where('kategori', 'bahan_paparan')->first();
-                if ($old) {
-                    if ($old->file_path && Storage::disk('public')->exists($old->file_path)) {
-                        Storage::disk('public')->delete($old->file_path);
+                if ($kategori === 'bahan_paparan') {
+                    $old = $tahapan->files()->where('kategori', 'bahan_paparan')->first();
+                    if ($old) {
+                        if ($old->file_path && Storage::disk('public')->exists($old->file_path)) {
+                            Storage::disk('public')->delete($old->file_path);
+                        }
+                        $old->delete();
                     }
-                    $old->delete();
-                }
-                $path = $file->store('timeline_files/' . $pelakuUsaha->id, 'public');
-                $tahapan->files()->create([
-                    'kategori' => 'bahan_paparan',
-                    'tipe' => 'file',
-                    'nama_dokumen' => $namaDokumen ?: 'Bahan Paparan',
-                    'file_path' => $path,
-                    'file_name' => $originalName,
-                    'file_size' => $fileSize,
-                    'mime_type' => $mimeType,
-                ]);
-            } elseif ($kategori === 'permohonan_supervisi') {
-                $old = $tahapan->files()->where('kategori', 'permohonan_supervisi')->first();
-                if ($old) {
-                    if ($old->file_path && Storage::disk('public')->exists($old->file_path)) {
-                        Storage::disk('public')->delete($old->file_path);
+                    $tahapan->files()->create([
+                        'kategori' => 'bahan_paparan',
+                        'tipe' => 'file',
+                        'nama_dokumen' => $namaDokumen ?: 'Bahan Paparan',
+                        'file_path' => $path,
+                        'file_name' => $originalName,
+                        'file_size' => $fileSize,
+                        'mime_type' => $mimeType,
+                    ]);
+                } elseif ($kategori === 'permohonan_supervisi') {
+                    $old = $tahapan->files()->where('kategori', 'permohonan_supervisi')->first();
+                    if ($old) {
+                        if ($old->file_path && Storage::disk('public')->exists($old->file_path)) {
+                            Storage::disk('public')->delete($old->file_path);
+                        }
+                        $old->delete();
                     }
-                    $old->delete();
-                }
-                $path = $file->store('timeline_files/' . $pelakuUsaha->id, 'public');
-                $tahapan->files()->create([
-                    'kategori' => 'permohonan_supervisi',
-                    'tipe' => 'file',
-                    'nama_dokumen' => $namaDokumen ?: 'Permohonan Supervisi',
-                    'file_path' => $path,
-                    'file_name' => $originalName,
-                    'file_size' => $fileSize,
-                    'mime_type' => $mimeType,
-                ]);
-            } elseif ($kategori === 'peta_spasial') {
-                $slotNum = $slot ? (int) $slot : 1;
-                $old = $tahapan->files()->where('kategori', 'peta_spasial')->where('slot', $slotNum)->first();
-                if ($old) {
-                    if ($old->file_path && Storage::disk('public')->exists($old->file_path)) {
-                        Storage::disk('public')->delete($old->file_path);
+                    $tahapan->files()->create([
+                        'kategori' => 'permohonan_supervisi',
+                        'tipe' => 'file',
+                        'nama_dokumen' => $namaDokumen ?: 'Permohonan Supervisi',
+                        'file_path' => $path,
+                        'file_name' => $originalName,
+                        'file_size' => $fileSize,
+                        'mime_type' => $mimeType,
+                    ]);
+                } elseif ($kategori === 'peta_spasial') {
+                    $slotNum = $slot ? (int) $slot : 1;
+                    $old = $tahapan->files()->where('kategori', 'peta_spasial')->where('slot', $slotNum)->first();
+                    if ($old) {
+                        if ($old->file_path && Storage::disk('public')->exists($old->file_path)) {
+                            Storage::disk('public')->delete($old->file_path);
+                        }
+                        $old->delete();
                     }
-                    $old->delete();
-                }
-                $path = $file->store('timeline_files/' . $pelakuUsaha->id . '/peta_spasial', 'public');
-                $tahapan->files()->create([
-                    'kategori' => 'peta_spasial',
-                    'slot' => $slotNum,
-                    'tipe' => 'file',
-                    'nama_dokumen' => $namaDokumen ?: ('Foto ' . $slotNum),
-                    'file_path' => $path,
-                    'file_name' => $originalName,
-                    'file_size' => $fileSize,
-                    'mime_type' => $mimeType,
-                ]);
-            } else {
-                $path = $file->store('timeline_files/' . $pelakuUsaha->id, 'public');
-                $tahapan->files()->create([
-                    'kategori' => $kategori ?: 'dokumen_tambahan',
-                    'tipe' => 'file',
-                    'nama_dokumen' => $namaDokumen ?: $originalName,
-                    'file_path' => $path,
-                    'file_name' => $originalName,
-                    'file_size' => $fileSize,
-                    'mime_type' => $mimeType,
-                ]);
-            }
-        }
-
-        // ==================== 3. Upload Banyak Foto (Bulk Peta Spasial) ====================
-        if ($request->hasFile('files')) {
-            $request->validate([
-                'files.*' => 'file|max:' . config('upload.max_photo_size_kb'),
-            ]);
-
-            if ($kategori === 'peta_spasial') {
-                $existingSlots = $tahapan->files()->where('kategori', 'peta_spasial')->pluck('slot')->toArray();
-                $uploadedFiles = $request->file('files');
-                $availableSlots = array_values(array_diff(range(1, 8), $existingSlots));
-
-                foreach ($uploadedFiles as $idx => $f) {
-                    if (empty($availableSlots)) {
-                        break;
-                    }
-                    $targetSlot = array_shift($availableSlots);
-                    $path = $f->store('timeline_files/' . $pelakuUsaha->id . '/peta_spasial', 'public');
                     $tahapan->files()->create([
                         'kategori' => 'peta_spasial',
-                        'slot' => $targetSlot,
+                        'slot' => $slotNum,
                         'tipe' => 'file',
-                        'nama_dokumen' => 'Foto ' . $targetSlot,
+                        'nama_dokumen' => $namaDokumen ?: ('Foto ' . $slotNum),
                         'file_path' => $path,
-                        'file_name' => $f->getClientOriginalName(),
-                        'file_size' => $f->getSize(),
-                        'mime_type' => $f->getMimeType(),
+                        'file_name' => $originalName,
+                        'file_size' => $fileSize,
+                        'mime_type' => $mimeType,
+                    ]);
+                } else {
+                    $tahapan->files()->create([
+                        'kategori' => $kategori ?: 'dokumen_tambahan',
+                        'tipe' => 'file',
+                        'nama_dokumen' => $namaDokumen ?: $originalName,
+                        'file_path' => $path,
+                        'file_name' => $originalName,
+                        'file_size' => $fileSize,
+                        'mime_type' => $mimeType,
                     ]);
                 }
             }
-        }
 
-        if ($request->input('action_type') === 'submit' || $request->has('tandai_selesai')) {
-            $tahapan->update([
-                'status' => 'selesai',
-                'tanggal' => now(),
-            ]);
+            // ==================== 3. Upload Banyak Foto (Bulk Peta Spasial) ====================
+            if ($request->hasFile('files')) {
+                $maxPhotoKb = (int) (config('upload.max_photo_size_kb', 10240) ?: 10240);
+                $request->validate([
+                    'files.*' => 'file|max:' . $maxPhotoKb,
+                ]);
+
+                if ($kategori === 'peta_spasial') {
+                    $existingSlots = $tahapan->files()->where('kategori', 'peta_spasial')->pluck('slot')->toArray();
+                    $uploadedFiles = $request->file('files');
+                    $availableSlots = array_values(array_diff(range(1, 8), $existingSlots));
+
+                    foreach ($uploadedFiles as $idx => $f) {
+                        if (empty($availableSlots)) {
+                            break;
+                        }
+                        $targetSlot = array_shift($availableSlots);
+                        $path = $f->store('timeline_files/' . $pelakuUsaha->id . '/peta_spasial', 'public');
+                        $tahapan->files()->create([
+                            'kategori' => 'peta_spasial',
+                            'slot' => $targetSlot,
+                            'tipe' => 'file',
+                            'nama_dokumen' => 'Foto ' . $targetSlot,
+                            'file_path' => $path,
+                            'file_name' => $f->getClientOriginalName(),
+                            'file_size' => $f->getSize(),
+                            'mime_type' => $f->getMimeType(),
+                        ]);
+                    }
+                }
+            }
+
+            if ($request->input('action_type') === 'submit' || $request->has('tandai_selesai')) {
+                $tahapan->update([
+                    'status' => 'selesai',
+                    'tanggal' => now(),
+                ]);
+                return redirect()->route('timeline-pengawasan.show', ['pelakuUsaha' => $pelakuUsaha->id, 'tab' => $tahap])
+                    ->with('success', 'Dokumen/Link berhasil disimpan dan tahap ' . ucfirst($tahap) . ' ditandai selesai.');
+            }
+
             return redirect()->route('timeline-pengawasan.show', ['pelakuUsaha' => $pelakuUsaha->id, 'tab' => $tahap])
-                ->with('success', 'Dokumen/Link berhasil disimpan dan tahap ' . ucfirst($tahap) . ' ditandai selesai.');
-        }
+                ->with('success', 'Dokumen/Tautan Google Drive berhasil disimpan.');
 
-        return redirect()->route('timeline-pengawasan.show', ['pelakuUsaha' => $pelakuUsaha->id, 'tab' => $tahap])
-            ->with('success', 'Dokumen/Tautan Google Drive berhasil disimpan.');
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            Log::error('Upload Timeline Error: ' . $e->getMessage(), [
+                'pelaku_usaha_id' => $pelakuUsaha->id,
+                'tahap' => $tahap,
+                'exception' => $e,
+            ]);
+
+            return redirect()->route('timeline-pengawasan.show', ['pelakuUsaha' => $pelakuUsaha->id, 'tab' => $tahap])
+                ->with('error', 'Gagal memproses dokumen: ' . $e->getMessage());
+        }
     }
 
     public function selesaikanSupervisi(Request $request, PelakuUsaha $pelakuUsaha)
@@ -537,7 +601,9 @@ class TimelineTahapanController extends Controller
 
     public function deleteFile(TimelineTahapanFile $file)
     {
-        Storage::disk('public')->delete($file->file_path);
+        if ($file->file_path && Storage::disk('public')->exists($file->file_path)) {
+            Storage::disk('public')->delete($file->file_path);
+        }
         $file->delete();
 
         return back()->with('success', 'Dokumen berhasil dihapus');

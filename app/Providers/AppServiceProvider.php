@@ -26,7 +26,12 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        if (!config()->has('upload.max_file_size_kb')) {
+            config([
+                'upload.max_file_size_kb' => (int) env('UPLOAD_MAX_FILE_SIZE_KB', 51200),
+                'upload.max_photo_size_kb' => (int) env('UPLOAD_MAX_PHOTO_SIZE_KB', 10240),
+            ]);
+        }
     }
 
     public function boot(): void

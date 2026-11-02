@@ -234,3 +234,30 @@ Route::get('storage/{path}', function ($path) {
     }
     return response()->file($fullPath);
 })->where('path', '.*')->name('storage.serve');
+
+// Helper maintenance untuk shared hosting (menjalankan migrasi & clear cache dari browser)
+Route::middleware(['auth'])->group(function () {
+    Route::get('artisan-migrate', function () {
+        try {
+            \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+            $output = \Illuminate\Support\Facades\Artisan::output();
+            return response('<pre style="background:#1e293b;color:#f8fafc;padding:20px;border-radius:8px;font-family:monospace;">' 
+                . "=== MIGRATE OUTPUT ===\n" . e($output ?: "Semua migrasi sudah up-to-date.\n") . '</pre>');
+        } catch (\Throwable $e) {
+            return response('<pre style="background:#7f1d1d;color:#fee2e2;padding:20px;border-radius:8px;font-family:monospace;">' 
+                . "=== MIGRATE ERROR ===\n" . e($e->getMessage()) . '</pre>', 500);
+        }
+    })->name('artisan.migrate');
+
+    Route::get('artisan-clear', function () {
+        try {
+            \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+            $output = \Illuminate\Support\Facades\Artisan::output();
+            return response('<pre style="background:#1e293b;color:#f8fafc;padding:20px;border-radius:8px;font-family:monospace;">' 
+                . "=== CACHE CLEAR OUTPUT ===\n" . e($output) . '</pre>');
+        } catch (\Throwable $e) {
+            return response('<pre style="background:#7f1d1d;color:#fee2e2;padding:20px;border-radius:8px;font-family:monospace;">' 
+                . "=== CACHE CLEAR ERROR ===\n" . e($e->getMessage()) . '</pre>', 500);
+        }
+    })->name('artisan.clear');
+});
